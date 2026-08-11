@@ -1,51 +1,83 @@
-# rideless-app
-# Welcome to your Expo app 👋
+# Rideless
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Visão Geral
+ 
+O Rideless estima preços de corrida do Uber, 99 e InDrive usando sua localização atual e destino, depois os ordena do mais barato para o mais caro. Toque em qualquer opção para abrir o app correspondente com a rota já preenchida.
+ 
+Sem cadastro. Sem chaves de API. Sem rastreamento.
+  
+## Funcionalidades
+ 
+- **Comparação de preços em tempo real** entre categorias do Uber, 99 e InDrive
+- **Cálculo de rota** via OSRM — sem necessidade do Google Maps
+- **Busca de endereços** com Nominatim (OpenStreetMap)
+- **Mapa escuro** renderizado com MapLibre GL + tiles CartoDB Dark Matter
+- **Detecção de horário de pico** com estimativa automática de surge pricing
+- **Deep links** para abrir o app de corrida escolhido diretamente
 
-## Get started
+## Requisitos
+ 
+- Node.js 18+
+- npm 10 ou 11
+- Expo Go (iOS ou Android) — para desenvolvimento
+- iOS 16+ / Android 10+
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Como Começar
+ 
+Clone o repositório e instale as dependências:
+ 
 ```bash
-npm run reset-project
+git clone https://github.com/seu-usuario/rideless.git
+cd rideless
+npm install
 ```
+ 
+Inicie o servidor de desenvolvimento:
+ 
+```bash
+npx expo start
+```
+ 
+Escaneie o QR code com o Expo Go no seu dispositivo.
+ 
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Lógica de estimativa de preços
+ 
+O Rideless não acessa APIs de preços em tempo real. Todos os valores são estimativas baseadas nas tarifas publicamente conhecidas de cada plataforma:
+ 
+```
+preço = tarifa_base + (preço_por_km × distância) + (preço_por_min × tempo)
+```
+ 
+Em horários de pico (7h–9h e 17h–20h), um multiplicador de surge é aplicado por plataforma. Os preços reais podem variar.
+ 
+Nesta versão MVP, as tarifas são estáticas e definidas manualmente em `constants/platforms.ts`. O objetivo é validar o fluxo do produto e coletar dados reais de corridas dos usuários antes de evoluir o modelo.
+ 
+### Próxima etapa: Modelo preditivo com dados reais
+ 
+Após a coleta de dados suficientes via confirmação de preço pelos usuários, o plano é substituir o algoritmo estático por um modelo de machine learning treinado com dados reais. O modelo levará em conta:
+ 
+- **Histórico de preços** por plataforma, categoria, região e horário
+- **Variáveis externas** como clima, eventos na cidade e feriados
+- **Padrões de surge pricing** identificados ao longo do tempo
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+A implementação será feita em Python com `scikit-learn` ou `XGBoost`, exposta via uma API REST consumida pelo app. O modelo será retreinado periodicamente conforme novos dados forem coletados, aumentando progressivamente a precisão das estimativas.
+## Stack Tecnológica
+ 
+| Camada | Tecnologia |
+|---|---|
+| Framework | React Native + Expo SDK 57 |
+| Navegação | Expo Router |
+| Mapas | MapLibre GL (via WebView) |
+| Tiles | CartoDB Dark Matter |
+| Roteamento | OSRM |
+| Geocodificação | Nominatim (OpenStreetMap) |
+| Fonte | Space Mono |
+ 
+## Contribuindo
+ 
+Pull requests são bem-vindos. Para mudanças maiores, abra uma issue primeiro para discutir o que você gostaria de alterar.
+ 
+## Licença
+ 
+MIT

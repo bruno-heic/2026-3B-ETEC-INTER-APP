@@ -14,7 +14,7 @@ import {
   searchSuggestions,
   getLocationWithAddress,
   Suggestion,
-} from "../actions/location-actions";
+} from "../services/location";
 
 interface SearchInputProps {
   onOriginSelect: (suggestion: Suggestion) => void;

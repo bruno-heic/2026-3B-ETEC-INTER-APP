@@ -3,7 +3,7 @@ import { theme } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { getLocationWithAddress } from "../actions/location-actions";
+import { getLocationWithAddress } from "../services/location";
 import { MainButton } from "../components/button";
 export default function Index() {
   const handleLocation = async () => {

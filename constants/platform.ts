@@ -26,7 +26,7 @@ export const platforms: Platform[] = [
   },
   {
     id: "uber-x",
-    name: "UberX",
+    name: "Uber X",
     app: "uber",
     productId: "uberx",
     capacity: 4,
@@ -37,7 +37,7 @@ export const platforms: Platform[] = [
   },
   {
     id: "uber-confort",
-    name: "Comfort",
+    name: "Uber Comfort",
     app: "uber",
     productId: "comfort",
     capacity: 4,

@@ -1,9 +1,9 @@
-export interface RouteResult {
+export interface DirectionResult {
   distanceKm: number;
   durationMin: number;
 }
 
-export async function getRoute(
+export async function getDirection(
   originLat: number,
   originLon: number,
   destLat: number,

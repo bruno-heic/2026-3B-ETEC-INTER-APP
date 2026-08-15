@@ -6,11 +6,10 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
-  Linking,
-  Alert,
 } from "react-native";
-import { theme } from "../constants/theme";
-import { getTrip, TripResult } from "../actions/trip-service";
+import { router } from "expo-router";
+import { theme } from "@/constants/theme";
+import { getTrip, TripResult } from "@/services/trip-service";
 
 interface PriceSheetProps {
   originLat: number;
@@ -44,37 +43,27 @@ export default function PriceSheet({
     fetch();
   }, [originLat, originLon, destLat, destLon]);
 
-  const handleOpenApp = async (
-    platformId: string,
-    app: string,
-    productId?: string,
-  ) => {
-    let url = "";
-
-    if (app === "uber") {
-      url =
-        `https://m.uber.com/ul/?client_id=Xk7SRRSR6RYsBhYVez1t_Icqfj4xzQer` +
-        `&action=setPickup` +
-        `&pickup[latitude]=${originLat}` +
-        `&pickup[longitude]=${originLon}` +
-        `&pickup[nickname]=${encodeURIComponent(originName || "Origem")}` +
-        `&dropoff[latitude]=${destLat}` +
-        `&dropoff[longitude]=${destLon}` +
-        `&dropoff[nickname]=${encodeURIComponent(destName || "Destino")}` +
-        `&product_id=${productId || ""}`;
-    } else {
-      url =
-        `https://www.google.com/maps/dir/?api=1` +
-        `&origin=${originLat},${originLon}` +
-        `&destination=${destLat},${destLon}` +
-        `&travelmode=driving`;
-    }
-
-    try {
-      await Linking.openURL(url);
-    } catch (e) {
-      Alert.alert("Erro", "Não foi possível abrir o aplicativo.");
-    }
+  const handleSelectRide = (item: TripResult["prices"][0]) => {
+    router.push({
+      pathname: "/confirm",
+      params: {
+        platformId: item.platform.id,
+        platformName: item.platform.name,
+        platformApp: item.platform.app,
+        productId: item.platform.productId ?? "",
+        price: item.price.toFixed(2),
+        priceMin: item.prediction?.price_min?.toFixed(2) ?? "",
+        priceMax: item.prediction?.price_max?.toFixed(2) ?? "",
+        confidence: item.prediction?.confidence?.toFixed(2) ?? "",
+        acceptanceProbability: item.prediction?.acceptance_probability?.toFixed(2) ?? "",
+        originLat: originLat.toString(),
+        originLon: originLon.toString(),
+        originName: originName ?? "",
+        destLat: destLat.toString(),
+        destLon: destLon.toString(),
+        destName: destName ?? "",
+      },
+    });
   };
 
   if (loading) {
@@ -105,22 +94,12 @@ export default function PriceSheet({
 
       <View style={styles.bestBlock}>
         <Text style={styles.bestPlatform}>O mais barato agora é:</Text>
-        <TouchableOpacity
-          onPress={() =>
-            handleOpenApp(
-              cheapest.platform.id,
-              cheapest.platform.app,
-              cheapest.platform.productId,
-            )
-          }
-          style={{ gap: 5 }}
-        >
+        <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
           <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
           <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Lista das outras opções */}
       <FlatList
         data={result.prices.slice(1)}
         keyExtractor={(item) => item.platform.id}
@@ -129,13 +108,7 @@ export default function PriceSheet({
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.row}
-            onPress={() =>
-              handleOpenApp(
-                item.platform.id,
-                item.platform.app,
-                item.platform.productId,
-              )
-            }
+            onPress={() => handleSelectRide(item)}
           >
             <Text style={styles.platformName}>{item.platform.name}</Text>
             <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
@@ -161,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 32,
     paddingTop: 12,
-    maxHeight: "45%",
+    maxHeight: "50%",
   },
   handle: {
     width: 36,
@@ -207,14 +180,14 @@ const styles = StyleSheet.create({
   },
   platformName: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
     width: 140,
     textAlign: "left",
   },
   price: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
     width: 120,
     textAlign: "left",

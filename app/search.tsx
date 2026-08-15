@@ -3,7 +3,7 @@ import { theme } from "../constants/theme";
 import SearchInput from "../components/searchInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
-import { Suggestion } from "../actions/location-actions";
+import { Suggestion } from "../services/location-actions";
 import { MainButton } from "../components/button";
 import { Alert } from "react-native";
 

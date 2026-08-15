@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
-import { getRoutePolyline } from "../actions/location-actions";
+import { getRoutePolyline } from "../services/location";
 import { theme } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import PriceSheet from "../components/priceSheet";

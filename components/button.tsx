@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, GestureResponderEvent } from "react-native";
+import { GestureResponderEvent, Text, TouchableOpacity } from "react-native";
 import { theme } from "../constants/theme";
 
 interface ButtonProps {
@@ -12,7 +12,9 @@ export const MainButton = ({ text, event }: ButtonProps) => {
       style={{
         borderWidth: theme.border.default,
         borderColor: theme.colors.text,
-        paddingVertical: 15,
+        paddingVertical: 18,
+        alignItems: "center",
+        borderRadius: 30,
       }}
       onPress={event}
     >

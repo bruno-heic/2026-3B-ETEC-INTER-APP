@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { theme } from "@/constants/theme";
-import { getTrip, TripResult } from "@/services/trip-service";
+import { getTrip } from "@/services/trip-service";
+import { TripResult } from "@/types/trip";
 
 interface PriceSheetProps {
   originLat: number;
@@ -81,16 +82,11 @@ export default function PriceSheet({
   return (
     <View style={styles.container}>
         <View style={styles.bestBlock}>
-          <Text style={styles.bestPlatform}>O mais barato agora é:</Text>
+          <Text style={styles.bestPlatform}>O mais barato agora é</Text>
           <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
             <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
             <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
           </TouchableOpacity>
-          {cheapest.isPeak && (
-          <Text style={styles.peakWarning}>
-            Atualmente em horário de pico, com preços elevados.
-          </Text>
-        )}
         </View>
 
       <FlatList
@@ -144,8 +140,8 @@ const styles = StyleSheet.create({
   },
   bestPrice: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
-    color: theme.colors.accent,
+    fontSize: 25,
+    color: theme.colors.text,
   },
   bestLabel: {
     fontFamily: theme.fonts.mono,

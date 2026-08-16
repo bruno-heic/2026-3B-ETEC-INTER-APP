@@ -39,7 +39,7 @@ export async function getTrip(
         // Se o modelo retornou, usa o predicted_price
         // senão mantém o preço estático como fallback
         price: prediction?.predicted_price ?? item.price,
-        prediction,
+        prediction: prediction ?? undefined,
       }
     })
   )

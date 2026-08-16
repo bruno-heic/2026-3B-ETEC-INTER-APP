@@ -8,7 +8,7 @@ export async function getDirection(
   originLon: number,
   destLat: number,
   destLon: number,
-): Promise<RouteResult> {
+): Promise<DirectionResult> {
   const url = `https://router.project-osrm.org/route/v1/driving/${originLon},${originLat};${destLon},${destLat}?overview=false`;
 
   const res = await fetch(url);

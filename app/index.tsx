@@ -1,10 +1,10 @@
 import { Text, View, TouchableOpacity } from "react-native";
-import { theme } from "../constants/theme";
+import { theme } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { getLocationWithAddress } from "../services/location";
-import { MainButton } from "../components/button";
+import { getLocationWithAddress } from "@/services/location";
+import { MainButton } from "@/components/button";
 export default function Index() {
   const handleLocation = async () => {
     const coords = await getLocationWithAddress();

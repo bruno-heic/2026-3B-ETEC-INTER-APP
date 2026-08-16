@@ -46,33 +46,42 @@ export default function Confirm() {
   }>();
 
   const handleOpenApp = async () => {
-    let url = "";
+  if (platformApp === "99") {
+    router.push({
+      pathname: "/instructions99",
+      params: {
+        originName,
+        destName,
+        originLat,
+        originLon,
+        destLat,
+        destLon,
+      },
+    });
+    return;
+  }
 
-    if (platformApp === "uber") {
-      url =
-        `https://m.uber.com/ul/?client_id=Xk7SRRSR6RYsBhYVez1t_Icqfj4xzQer` +
-        `&action=setPickup` +
-        `&pickup[latitude]=${originLat}` +
-        `&pickup[longitude]=${originLon}` +
-        `&pickup[nickname]=${encodeURIComponent(originName || "Origem")}` +
-        `&dropoff[latitude]=${destLat}` +
-        `&dropoff[longitude]=${destLon}` +
-        `&dropoff[nickname]=${encodeURIComponent(destName || "Destino")}` +
-        `&product_id=${productId}`;
-    } else {
-      url =
-        `https://www.google.com/maps/dir/?api=1` +
-        `&origin=${originLat},${originLon}` +
-        `&destination=${destLat},${destLon}` +
-        `&travelmode=driving`;
-    }
+  // Uber e outros — abre direto
+  let url = "";
+  if (platformApp === "uber") {
+    url =
+      `https://m.uber.com/ul/?client_id=Xk7SRRSR6RYsBhYVez1t_Icqfj4xzQer` +
+      `&action=setPickup` +
+      `&pickup[latitude]=${originLat}` +
+      `&pickup[longitude]=${originLon}` +
+      `&pickup[nickname]=${encodeURIComponent(originName || "Origem")}` +
+      `&dropoff[latitude]=${destLat}` +
+      `&dropoff[longitude]=${destLon}` +
+      `&dropoff[nickname]=${encodeURIComponent(destName || "Destino")}` +
+      `&product_id=${productId}`;
+  }
 
-    try {
-      await Linking.openURL(url);
-    } catch (e) {
-      Alert.alert("Erro", "Não foi possível abrir o aplicativo.");
-    }
-  };
+  try {
+    await Linking.openURL(url);
+  } catch (e) {
+    Alert.alert("Erro", "Não foi possível abrir o aplicativo.");
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,9 +90,6 @@ export default function Confirm() {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={30} color={theme.colors.text} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-            <MaterialIcons name="info-outline" size={30} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
       {/* Conteúdo */}
@@ -236,8 +242,9 @@ const styles = StyleSheet.create({
   btnPrimary: {
     borderWidth: 1,
     borderColor: theme.colors.text,
-    paddingVertical: 14,
+    paddingVertical: 18,
     alignItems: "center",
+    borderRadius: 30,
   },
   btnPrimaryText: {
     fontFamily: theme.fonts.mono,

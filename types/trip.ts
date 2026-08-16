@@ -1,4 +1,4 @@
-import { Platform } from "@/constants/platforms"
+import { Platform } from "@/constants/platform"
 import { PredictResult } from "@/services/predict"
 
 export interface PriceResult {

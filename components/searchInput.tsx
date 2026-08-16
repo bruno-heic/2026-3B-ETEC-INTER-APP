@@ -196,10 +196,8 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 18,
     paddingVertical: 20,
-    borderBottomWidth: 0.5,
-    borderTopWidth: 0.5,
     borderColor: theme.colors.border,
   },
   dotOrigin: {
@@ -218,7 +216,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
   },
   suggestionList: {
@@ -230,12 +228,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingVertical: 15,
-    borderBottomWidth: 0.5,
-    borderColor: theme.colors.border,
   },
   locationLabel: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
   },
   suggestionItem: {
@@ -245,12 +241,12 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xl,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
   },
   suggestionSub: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.lg,
+    fontSize: theme.fontSizes.md,
     color: theme.colors.muted,
     marginTop: 2,
   },

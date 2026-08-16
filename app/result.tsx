@@ -94,7 +94,8 @@ export default function Result() {
       ]);
 
   const handleBack = () => {
-    router.back();
+    router.dismissAll();
+    router.replace("/search");
   };
 
   const mapHtml = `

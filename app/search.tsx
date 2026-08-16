@@ -1,10 +1,10 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { theme } from "../constants/theme";
-import SearchInput from "../components/searchInput";
+import { theme } from "@/constants/theme";
+import SearchInput from "@/components/searchInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
-import { Suggestion } from "../services/location-actions";
-import { MainButton } from "../components/button";
+import { Suggestion } from "@/services/location";
+import { MainButton } from "@/components/button";
 import { Alert } from "react-native";
 
 export default function Search() {
@@ -18,7 +18,6 @@ export default function Search() {
   const [origin, setOrigin] = useState<Suggestion | null>(null);
   const [destination, setDestination] = useState<Suggestion | null>(null);
 
-  // Limpa/Reseta as informações antigas sempre que os parâmetros da tela mudarem
   useEffect(() => {
     if (lat && lon) {
       setOrigin({

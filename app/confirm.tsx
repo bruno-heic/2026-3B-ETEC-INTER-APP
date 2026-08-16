@@ -80,12 +80,12 @@ export default function Confirm() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+          <MaterialIcons name="arrow-back" size={30} color={theme.colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity>
+            <MaterialIcons name="info-outline" size={30} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
-       <Text style={styles.disclaimer}>
-          Estimativa gerada por Inteligência Artificial. O valor real pode variar.
-        </Text>
       {/* Conteúdo */}
       <View style={styles.content}>
 
@@ -172,6 +172,10 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingVertical: 16,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   content: {
     flex: 1,

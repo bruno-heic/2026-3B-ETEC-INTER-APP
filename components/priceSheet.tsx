@@ -80,25 +80,18 @@ export default function PriceSheet({
 
   return (
     <View style={styles.container}>
-      <View style={styles.handle} />
-
-      <Text style={styles.disclaimer}>
-        Estimativa de preço. Pode haver variação no valor real.
-      </Text>
-
-      {cheapest.isPeak && (
-        <Text style={styles.peakWarning}>
-          horário de pico · preços elevados
-        </Text>
-      )}
-
-      <View style={styles.bestBlock}>
-        <Text style={styles.bestPlatform}>O mais barato agora é:</Text>
-        <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
-          <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
-          <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.bestBlock}>
+          <Text style={styles.bestPlatform}>O mais barato agora é:</Text>
+          <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
+            <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
+            <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
+          </TouchableOpacity>
+          {cheapest.isPeak && (
+          <Text style={styles.peakWarning}>
+            Atualmente em horário de pico, com preços elevados.
+          </Text>
+        )}
+        </View>
 
       <FlatList
         data={result.prices.slice(1)}
@@ -133,41 +126,31 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     paddingHorizontal: 24,
     paddingBottom: 32,
-    paddingTop: 12,
     maxHeight: "50%",
-  },
-  handle: {
-    width: 36,
-    height: 3,
-    backgroundColor: theme.colors.borderStrong,
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 12,
   },
   peakWarning: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.xs,
+    fontSize: theme.fontSizes.sm,
     color: theme.colors.muted,
-    marginBottom: 8,
   },
   bestBlock: {
-    marginBlock: 35,
+    marginBlock: 20,
     gap: 10,
   },
   bestPlatform: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.lg,
+    fontSize: theme.fontSizes.md,
     color: theme.colors.text,
   },
   bestPrice: {
     fontFamily: theme.fonts.mono,
     fontSize: theme.fontSizes.xl,
-    color: theme.colors.text,
+    color: theme.colors.accent,
   },
   bestLabel: {
     fontFamily: theme.fonts.mono,
     fontSize: theme.fontSizes.xl,
-    color: theme.colors.accent,
+    color: theme.colors.text,
   },
   list: {
     flex: 1,

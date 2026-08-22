@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { theme } from "@/constants/theme";
 import { getTrip } from "@/services/trip-service";
 import { TripResult } from "@/types/trip";
+import { LocationRecommendation } from "@/services/intelligence";
 
 interface PriceSheetProps {
   originLat: number;
@@ -19,6 +20,7 @@ interface PriceSheetProps {
   destLat: number;
   destLon: number;
   destName?: string;
+  onSelectRecommendation?: (rec: LocationRecommendation) => void;
 }
 
 export default function PriceSheet({
@@ -28,6 +30,7 @@ export default function PriceSheet({
   destLat,
   destLon,
   destName,
+  onSelectRecommendation,
 }: PriceSheetProps) {
   const [result, setResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +70,23 @@ export default function PriceSheet({
     });
   };
 
+  const handleOpenRecommendations = () => {
+    router.push({
+      pathname: "/recommendations",
+      params: {
+        originLat: originLat.toString(),
+        originLon: originLon.toString(),
+        destLat: destLat.toString(),
+        destLon: destLon.toString(),
+        distanciaKm: result ? (result.distanceKm).toString() : "0",
+        duracaoMin: result ? (result.durationMin).toString() : "0",
+        plataforma: result?.prices[0]?.platform.app ?? "uber",
+        categoria: result?.prices[0]?.platform.id ?? "uber-x",
+        precoEstimado: result?.prices[0]?.price.toString() ?? "0",
+      },
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -81,13 +101,13 @@ export default function PriceSheet({
 
   return (
     <View style={styles.container}>
-        <View style={styles.bestBlock}>
-          <Text style={styles.bestPlatform}>O mais barato agora é</Text>
-          <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
-            <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
-            <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.bestBlock}>
+        <Text style={styles.bestPlatform}>O mais barato agora é</Text>
+        <TouchableOpacity onPress={() => handleSelectRide(cheapest)} style={{ gap: 5 }}>
+          <Text style={styles.bestLabel}>{cheapest.platform.name}</Text>
+          <Text style={styles.bestPrice}>R$ {cheapest.price.toFixed(2)}</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={result.prices.slice(1)}
@@ -107,6 +127,11 @@ export default function PriceSheet({
           </TouchableOpacity>
         )}
       />
+
+      {/* Botão de recomendações */}
+      <TouchableOpacity style={styles.recommendBtn} onPress={handleOpenRecommendations}>
+        <Text style={styles.recommendText}>Ver recomendações de economia</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -123,11 +148,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 32,
     maxHeight: "50%",
-  },
-  peakWarning: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.sm,
-    color: theme.colors.muted,
   },
   bestBlock: {
     marginBlock: 20,
@@ -177,10 +197,16 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     textAlign: "left",
   },
-  disclaimer: {
+  recommendBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    borderTopWidth: 0.5,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+  },
+  recommendText: {
     fontFamily: theme.fonts.mono,
-    fontSize: 10,
+    fontSize: theme.fontSizes.sm,
     color: theme.colors.muted,
-    textAlign: "center",
   },
 });

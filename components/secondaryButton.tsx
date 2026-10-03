@@ -6,12 +6,12 @@ interface ButtonProps {
   event: (event: GestureResponderEvent) => void;
 }
 
-export const MainButton = ({ text, event }: ButtonProps) => {
+export const SecondaryButton = ({ text, event }: ButtonProps) => {
   return (
     <TouchableOpacity
       style={{
-        backgroundColor: "#0867ed",
-        borderColor: theme.colors.primaryBorder,
+        backgroundColor: theme.colors.secondary,
+        borderColor: "#1d1d1d",
         borderWidth: 1,
         paddingVertical: theme.spacing.md,
         alignItems: "center",

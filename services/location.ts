@@ -10,6 +10,13 @@ export interface Suggestion extends Coordinates {
   shortName: string;
 }
 
+export async function requestLocationPermission() {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status === Location.PermissionStatus.GRANTED) {
+    return null;
+  }
+}
+
 export async function getLocationWithAddress() {
   const { status } = await Location.requestForegroundPermissionsAsync();
 

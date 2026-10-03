@@ -28,8 +28,9 @@ export default function Result() {
   const [routeData, setRouteData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Ponto recomendado — null quando não há recomendação ativa
-  const [recommended, setRecommended] = useState<LocationRecommendation | null>(null);
+  const [recommended, setRecommended] = useState<LocationRecommendation | null>(
+    null,
+  );
 
   const webviewRef = useRef<WebView>(null);
 
@@ -59,8 +60,6 @@ export default function Result() {
     fetchRoute();
   }, [oLat, oLon, dLat, dLon]);
 
-  // Quando o usuário seleciona uma recomendação de localização
-  // injeta o ponto no mapa via JavaScript
   const handleSelectRecommendation = (rec: LocationRecommendation) => {
     setRecommended(rec);
 
@@ -148,7 +147,13 @@ export default function Result() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="small" color="#fff" />
-        <Text style={{ color: theme.colors.muted, marginTop: 10, fontFamily: theme.fonts.mono }}>
+        <Text
+          style={{
+            color: theme.colors.muted,
+            marginTop: 10,
+            fontFamily: theme.fonts.mono,
+          }}
+        >
           Calculando rota...
         </Text>
       </View>
@@ -164,7 +169,10 @@ export default function Result() {
 
   const coordinatesJson = routeData
     ? JSON.stringify(routeData.coordinates)
-    : JSON.stringify([[oLon, oLat], [dLon, dLat]]);
+    : JSON.stringify([
+        [oLon, oLat],
+        [dLon, dLat],
+      ]);
 
   const handleBack = () => {
     router.dismissAll();
@@ -268,14 +276,12 @@ export default function Result() {
         onSelectRecommendation={handleSelectRecommendation}
       />
 
-      {/* Header overlay */}
       <View style={styles.overlayContainer}>
         <TouchableOpacity onPress={handleBack}>
           <MaterialIcons name="close" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
         {recommended ? (
-          // Header com dados do ponto recomendado
           <View style={styles.directionHeader}>
             <View style={styles.timeDistanceBox}>
               <Text style={styles.durationText}>
@@ -286,11 +292,14 @@ export default function Result() {
               </Text>
             </View>
             <TouchableOpacity onPress={handleClearRecommendation}>
-              <MaterialIcons name="close" size={18} color={theme.colors.muted} />
+              <MaterialIcons
+                name="close"
+                size={18}
+                color={theme.colors.muted}
+              />
             </TouchableOpacity>
           </View>
         ) : (
-          // Header padrão com tempo e distância da rota
           <View style={styles.directionHeader}>
             <View style={styles.timeDistanceBox}>
               <Text style={styles.durationText}>{durationMin}</Text>

@@ -23,13 +23,13 @@ const RISK_COLORS = {
   low: "#44ffcc",
   medium: "#FFD700",
   high: "#FF4444",
-}
+};
 
 const RISK_ICONS = {
   low: "check-circle",
   medium: "warning",
   high: "error",
-}
+};
 
 export default function Recommendations() {
   const {
@@ -55,7 +55,8 @@ export default function Recommendations() {
   }>();
 
   const [risk, setRisk] = useState<RiskResult | null>(null);
-  const [recommendations, setRecommendations] = useState<RecommendResult | null>(null);
+  const [recommendations, setRecommendations] =
+    useState<RecommendResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   const oLat = parseFloat(originLat);
@@ -69,8 +70,10 @@ export default function Recommendations() {
       const [riskData, recData] = await Promise.all([
         getRisk(oLat, oLon),
         getRecommendations(
-          oLat, oLon,
-          dLat, dLon,
+          oLat,
+          oLon,
+          dLat,
+          dLon,
           parseFloat(distanciaKm),
           parseFloat(duracaoMin),
           plataforma,
@@ -90,7 +93,10 @@ export default function Recommendations() {
     router.back();
     // Pequeno delay para garantir que o result.tsx montou
     setTimeout(() => {
-      router.setParams({ recommendedLat: rec.lat.toString(), recommendedLon: rec.lon.toString() });
+      router.setParams({
+        recommendedLat: rec.lat.toString(),
+        recommendedLon: rec.lon.toString(),
+      });
     }, 300);
   };
 
@@ -99,7 +105,11 @@ export default function Recommendations() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <MaterialIcons name="arrow-back" size={22} color={theme.colors.text} />
+            <MaterialIcons
+              name="arrow-back"
+              size={22}
+              color={theme.colors.text}
+            />
           </TouchableOpacity>
         </View>
         <View style={styles.center}>
@@ -114,13 +124,16 @@ export default function Recommendations() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={22} color={theme.colors.text} />
+          <MaterialIcons
+            name="arrow-back"
+            size={22}
+            color={theme.colors.text}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>recomendações</Text>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-
         {/* Risco da área atual */}
         {risk && (
           <View style={styles.block}>
@@ -131,7 +144,12 @@ export default function Recommendations() {
                 size={20}
                 color={RISK_COLORS[risk.risk_level]}
               />
-              <Text style={[styles.riskLabel, { color: RISK_COLORS[risk.risk_level] }]}>
+              <Text
+                style={[
+                  styles.riskLabel,
+                  { color: RISK_COLORS[risk.risk_level] },
+                ]}
+              >
                 Risco {risk.risk_label}
               </Text>
               <Text style={styles.riskCount}>
@@ -157,7 +175,8 @@ export default function Recommendations() {
                 {recommendations.time_recommendation.message}
               </Text>
               <Text style={styles.economy}>
-                economia de R$ {recommendations.time_recommendation.economy.toFixed(2)}
+                economia de R${" "}
+                {recommendations.time_recommendation.economy.toFixed(2)}
               </Text>
             </View>
             <View style={styles.divider} />
@@ -181,7 +200,12 @@ export default function Recommendations() {
                       size={16}
                       color={RISK_COLORS[rec.risk_level]}
                     />
-                    <Text style={[styles.recRiskLabel, { color: RISK_COLORS[rec.risk_level] }]}>
+                    <Text
+                      style={[
+                        styles.recRiskLabel,
+                        { color: RISK_COLORS[rec.risk_level] },
+                      ]}
+                    >
                       Risco {rec.risk_label}
                     </Text>
                     <Text style={styles.recDistance}>
@@ -190,9 +214,13 @@ export default function Recommendations() {
                   </View>
                   <View style={styles.recDetails}>
                     <View>
-                      <Text style={styles.recPrice}>R$ {rec.new_price.toFixed(2)}</Text>
+                      <Text style={styles.recPrice}>
+                        R$ {rec.new_price.toFixed(2)}
+                      </Text>
                       {rec.most_common_crime && (
-                        <Text style={styles.recCrime}>{rec.most_common_crime}</Text>
+                        <Text style={styles.recCrime}>
+                          {rec.most_common_crime}
+                        </Text>
                       )}
                     </View>
                     <View style={styles.recEconomyBlock}>
@@ -221,7 +249,6 @@ export default function Recommendations() {
               </Text>
             </View>
           )}
-
       </ScrollView>
     </SafeAreaView>
   );

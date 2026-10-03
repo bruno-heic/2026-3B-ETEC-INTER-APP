@@ -46,55 +46,56 @@ export default function Confirm() {
   }>();
 
   const handleOpenApp = async () => {
-  if (platformApp === "99") {
-    router.push({
-      pathname: "/instructions99",
-      params: {
-        originName,
-        destName,
-        originLat,
-        originLon,
-        destLat,
-        destLon,
-      },
-    });
-    return;
-  }
+    if (platformApp === "99") {
+      router.push({
+        pathname: "/instructions99",
+        params: {
+          originName,
+          destName,
+          originLat,
+          originLon,
+          destLat,
+          destLon,
+        },
+      });
+      return;
+    }
 
-  // Uber e outros — abre direto
-  let url = "";
-  if (platformApp === "uber") {
-    url =
-      `https://m.uber.com/ul/?client_id=Xk7SRRSR6RYsBhYVez1t_Icqfj4xzQer` +
-      `&action=setPickup` +
-      `&pickup[latitude]=${originLat}` +
-      `&pickup[longitude]=${originLon}` +
-      `&pickup[nickname]=${encodeURIComponent(originName || "Origem")}` +
-      `&dropoff[latitude]=${destLat}` +
-      `&dropoff[longitude]=${destLon}` +
-      `&dropoff[nickname]=${encodeURIComponent(destName || "Destino")}` +
-      `&product_id=${productId}`;
-  }
+    let url = "";
+    if (platformApp === "uber") {
+      url =
+        `https://m.uber.com/ul/?client_id=Xk7SRRSR6RYsBhYVez1t_Icqfj4xzQer` +
+        `&action=setPickup` +
+        `&pickup[latitude]=${originLat}` +
+        `&pickup[longitude]=${originLon}` +
+        `&pickup[nickname]=${encodeURIComponent(originName || "Origem")}` +
+        `&dropoff[latitude]=${destLat}` +
+        `&dropoff[longitude]=${destLon}` +
+        `&dropoff[nickname]=${encodeURIComponent(destName || "Destino")}` +
+        `&product_id=${productId}`;
+    }
 
-  try {
-    await Linking.openURL(url);
-  } catch (e) {
-    Alert.alert("Erro", "Não foi possível abrir o aplicativo.");
-  }
-};
+    try {
+      await Linking.openURL(url);
+    } catch (e) {
+      Alert.alert("Erro", "Não foi possível abrir o aplicativo.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={30} color={theme.colors.text} />
+          <MaterialIcons
+            name="arrow-back"
+            size={30}
+            color={theme.colors.text}
+          />
         </TouchableOpacity>
       </View>
       {/* Conteúdo */}
       <View style={styles.content}>
-
         {/* Plataforma e preço */}
         <View style={styles.block}>
           <Text style={styles.label}>Plataforma selecionada</Text>
@@ -156,7 +157,6 @@ export default function Confirm() {
             </View>
           </View>
         ) : null}
-
       </View>
 
       {/* Botões */}
@@ -165,7 +165,6 @@ export default function Confirm() {
           <Text style={styles.btnPrimaryText}>Abrir {platformName}</Text>
         </TouchableOpacity>
       </View>
-
     </SafeAreaView>
   );
 }

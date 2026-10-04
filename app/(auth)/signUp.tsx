@@ -1,6 +1,7 @@
 import { MainButton } from "@/components/button";
 import { theme } from "@/constants/theme";
 import { createUser } from "@/services/auth";
+import { markOnboardingAsSeen } from "@/services/onboarding";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -17,6 +18,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSignUp = async () => {
+    await markOnboardingAsSeen();
     const result = await createUser(name, email, password);
     if (!result.ok) {
       Alert.alert("Erro", result.message);
@@ -27,7 +29,6 @@ export default function SignUp() {
       return;
     }
     router.replace("/(tabs)/home");
-    router.dismissAll();
   };
 
   return (

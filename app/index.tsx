@@ -7,12 +7,12 @@ import { Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function Index() {
   const handleContinue = async () => {
-    const session = await supabase.auth.getSession();
-    if (session) {
+    const { data } = await supabase.auth.getSession();
+    const seen = await hasSeenOnboarding();
+    if (data.session) {
       router.replace("/(tabs)/home");
     }
-    const seen = await hasSeenOnboarding();
-    router.replace(seen ? "/(auth)/signIn" : "/welcome");
+    if (!data.session) router.replace(seen ? "/(auth)/signIn" : "/welcome");
   };
 
   useEffect(() => {

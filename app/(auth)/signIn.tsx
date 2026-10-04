@@ -1,6 +1,8 @@
 import { MainButton } from "@/components/button";
 import { theme } from "@/constants/theme";
 import { signInUser } from "@/services/auth";
+import { markOnboardingAsSeen } from "@/services/onboarding";
+import { AntDesign } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link, router } from "expo-router";
@@ -11,14 +13,16 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const handleSignIn = async () => {
+    await markOnboardingAsSeen();
     const result = await signInUser(email, password);
     if (!result.ok) {
       Alert.alert("Erro", result.message);
       return;
     }
     router.replace("/(tabs)/home");
-    router.dismissAll();
   };
 
   return (
@@ -99,18 +103,35 @@ export default function SignIn() {
                 borderColor: "#353535",
               }}
             />
-            <TextInput
-              keyboardType="visible-password"
-              placeholder="Senha"
-              placeholderTextColor="#9999"
-              value={password}
-              onChangeText={setPassword}
+            <View
               style={{
-                fontSize: theme.fontSizes.md,
-                fontFamily: theme.fonts.sans,
-                color: theme.colors.text,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                flexDirection: "row",
               }}
-            />
+            >
+              <TextInput
+                keyboardType="visible-password"
+                placeholder="Senha"
+                placeholderTextColor="#9999"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                style={{
+                  fontSize: theme.fontSizes.md,
+                  fontFamily: theme.fonts.sans,
+                  color: theme.colors.text,
+                }}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <AntDesign
+                  name={showPassword ? "eye-invisible" : "eye"}
+                  size={24}
+                  color="#9999"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <Link href="/(auth)/signUp">
             <View

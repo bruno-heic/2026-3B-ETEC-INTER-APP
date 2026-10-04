@@ -2,9 +2,11 @@ import { MainButton } from "@/components/button";
 import { theme } from "@/constants/theme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function Terms() {
+  const [loading, setLoading] = useState(false);
   const handleContinue = () => {
     router.navigate("/(setup)/locationService");
   };

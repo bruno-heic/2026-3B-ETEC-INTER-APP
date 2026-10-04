@@ -1,18 +1,24 @@
 import { MainButton } from "@/components/button";
 import { theme } from "@/constants/theme";
+import { signInUser } from "@/services/auth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = () => {
-    alert("Login em desenvolvimento.");
+  const handleSignIn = async () => {
+    const result = await signInUser(email, password);
+    if (!result.ok) {
+      Alert.alert("Erro", result.message);
+      return;
+    }
     router.replace("/(tabs)/home");
+    router.dismissAll();
   };
 
   return (
@@ -24,23 +30,26 @@ export default function SignIn() {
         paddingTop: 12,
       }}
     >
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={{
-          borderWidth: 1,
-          backgroundColor: "#0c0c0c",
-          borderColor: "#1f1f1f",
-          borderRadius: 24,
-          width: 48,
-          height: 48,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingLeft: 8,
-        }}
-      >
-        <MaterialIcons name="arrow-back-ios" size={24} color="#fff" />
-      </TouchableOpacity>
+      {router.canGoBack() && (
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            borderWidth: 1,
+            backgroundColor: "#0c0c0c",
+            borderColor: "#1f1f1f",
+            borderRadius: 24,
+            width: 48,
+            height: 48,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingLeft: 8,
+          }}
+        >
+          <MaterialIcons name="arrow-back-ios" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
+
       <View style={{ flex: 1, gap: 20, paddingTop: 36 }}>
         <View>
           <Text

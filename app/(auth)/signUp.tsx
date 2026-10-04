@@ -1,18 +1,33 @@
 import { MainButton } from "@/components/button";
 import { theme } from "@/constants/theme";
+import { createUser } from "@/services/auth";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
-  const handleSignUp = () => {
-    alert("Cadastro em desenvolvimento.");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSignUp = async () => {
+    const result = await createUser(name, email, password);
+    if (!result.ok) {
+      Alert.alert("Erro", result.message);
+      return;
+    }
+    if (!result.session) {
+      Alert.alert("Quase lá", "Enviamos um e-mail de confirmação.");
+      return;
+    }
     router.replace("/(tabs)/home");
+    router.dismissAll();
   };
 
   return (
@@ -72,6 +87,24 @@ export default function SignUp() {
             }}
           >
             <TextInput
+              keyboardType="default"
+              placeholder="Nome"
+              placeholderTextColor="#9999"
+              value={name}
+              onChangeText={setName}
+              style={{
+                fontSize: theme.fontSizes.md,
+                fontFamily: theme.fonts.sans,
+                color: theme.colors.text,
+              }}
+            />
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderColor: "#353535",
+              }}
+            />
+            <TextInput
               keyboardType="email-address"
               placeholder="Email"
               placeholderTextColor="#9999"
@@ -89,18 +122,35 @@ export default function SignUp() {
                 borderColor: "#353535",
               }}
             />
-            <TextInput
-              keyboardType="visible-password"
-              placeholder="Senha"
-              placeholderTextColor="#9999"
-              value={password}
-              onChangeText={setPassword}
+            <View
               style={{
-                fontSize: theme.fontSizes.md,
-                fontFamily: theme.fonts.sans,
-                color: theme.colors.text,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                flexDirection: "row",
               }}
-            />
+            >
+              <TextInput
+                keyboardType="visible-password"
+                placeholder="Senha"
+                placeholderTextColor="#9999"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                style={{
+                  fontSize: theme.fontSizes.md,
+                  fontFamily: theme.fonts.sans,
+                  color: theme.colors.text,
+                }}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <AntDesign
+                  name={showPassword ? "eye-invisible" : "eye"}
+                  size={24}
+                  color="#9999"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <Link href="/(auth)/signIn">
             <View

@@ -27,5 +27,11 @@ export default function Layout() {
 
   if (!loaded) return null;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(setup)" />
+      <Stack.Screen name="(tabs)" />
+    </Stack>
+  );
 }

@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   const handleContinue = () => {
-    router.push("/(setup)/terms");
+    router.navigate("/(setup)/terms");
   };
   return (
     <SafeAreaView

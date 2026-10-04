@@ -9,12 +9,12 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function LocationService() {
   const handleContinue = () => {
-    router.push("/(auth)/signIn");
+    router.navigate("/(auth)/signIn");
   };
   const handleGetLocation = async () => {
     try {
       await requestLocationPermission();
-      router.push("/(auth)/signIn");
+      router.navigate("/(auth)/signIn");
     } catch (error) {
       alert(error);
     }

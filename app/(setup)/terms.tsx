@@ -6,7 +6,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function Terms() {
   const handleContinue = () => {
-    router.push("/(setup)/locationService");
+    router.navigate("/(setup)/locationService");
   };
 
   return (

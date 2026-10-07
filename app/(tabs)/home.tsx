@@ -2,7 +2,7 @@ import Options from "@/components/mainOptions";
 import { theme } from "@/constants/theme";
 import { signOutUser } from "@/services/auth";
 import { router } from "expo-router";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
@@ -29,11 +29,6 @@ export default function Home() {
         gap: 24,
       }}
     >
-      <View
-        style={{
-          alignItems: "flex-start",
-        }}
-      >
         <Text
           style={{
             fontFamily: theme.fonts.sansSemiBold,
@@ -43,7 +38,6 @@ export default function Home() {
         >
           Rideless
         </Text>
-      </View>
       <Options />
       <TouchableOpacity onPress={handleSignOut}>
         <Text style={{ color: "#fff" }}>Sair</Text>

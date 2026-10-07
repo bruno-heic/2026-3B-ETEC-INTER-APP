@@ -1,6 +1,8 @@
 import { theme } from "@/constants/theme";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {router} from "expo-router";
+
 export default function Options() {
   return (
     <>
@@ -100,6 +102,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
+          onPress={() => router.push("/")}
         >
           <MaterialIcons name="account-circle" size={20} color="#9999" />
           <Text

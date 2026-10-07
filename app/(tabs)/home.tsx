@@ -2,7 +2,7 @@ import Options from "@/components/mainOptions";
 import { theme } from "@/constants/theme";
 import { signOutUser } from "@/services/auth";
 import { router } from "expo-router";
-import { Alert, Text, TouchableOpacity, View, Image } from "react-native";
+import { Alert, Text, TouchableOpacity, View, Image, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
@@ -20,6 +20,7 @@ export default function Home() {
     router.replace("/(auth)/signIn");
   };
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <SafeAreaView
       style={{
         backgroundColor: "#000",
@@ -43,5 +44,6 @@ export default function Home() {
         <Text style={{ color: "#fff" }}>Sair</Text>
       </TouchableOpacity>
     </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }

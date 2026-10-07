@@ -2,7 +2,7 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "@/constants/theme";
 
-export default function Account() {
+export default function Settings() {
   return (
     <SafeAreaView style={{
         backgroundColor: "#000",
@@ -14,7 +14,7 @@ export default function Account() {
             fontFamily: theme.fonts.sansSemiBold,
             color: theme.colors.text,
             fontSize: 34,
-          }}>Account!</Text>
+          }}>Settings!</Text>
     </SafeAreaView>
   );
 }

@@ -102,7 +102,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
-          onPress={() => router.push("/")}
+          onPress={() => router.push("/account")}
         >
           <MaterialIcons name="account-circle" size={20} color="#9999" />
           <Text
@@ -129,6 +129,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
+          onPress={() => router.push("/settings")}
         >
           <MaterialIcons name="settings" size={20} color="#9999" />
           <Text

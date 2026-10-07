@@ -1,7 +1,10 @@
+import Options from "@/components/mainOptions";
+import { theme } from "@/constants/theme";
 import { signOutUser } from "@/services/auth";
 import { router } from "expo-router";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function Home() {
   const handleSignOut = async () => {
     const result = await signOutUser();
@@ -23,6 +26,7 @@ export default function Home() {
         flex: 1,
         paddingTop: 32,
         paddingHorizontal: 24,
+        gap: 24,
       }}
     >
       <View
@@ -30,14 +34,20 @@ export default function Home() {
           alignItems: "flex-start",
         }}
       >
-        <Image
-          source={require("../../assets/images/logo.png")}
-          style={{ width: 60, height: 60, resizeMode: "contain" }}
-        />
-        <TouchableOpacity onPress={handleSignOut}>
-          <Text style={{ color: "#fff" }}>Sair</Text>
-        </TouchableOpacity>
+        <Text
+          style={{
+            fontFamily: theme.fonts.sansSemiBold,
+            color: theme.colors.text,
+            fontSize: 34,
+          }}
+        >
+          Rideless
+        </Text>
       </View>
+      <Options />
+      <TouchableOpacity onPress={handleSignOut}>
+        <Text style={{ color: "#fff" }}>Sair</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

@@ -2,7 +2,13 @@ import Options from "@/components/mainOptions";
 import { theme } from "@/constants/theme";
 import { signOutUser } from "@/services/auth";
 import { router } from "expo-router";
-import { Alert, Text, TouchableOpacity, View, Image, Keyboard, TouchableWithoutFeedback } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
@@ -21,15 +27,15 @@ export default function Home() {
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <SafeAreaView
-      style={{
-        backgroundColor: "#000",
-        flex: 1,
-        paddingTop: 32,
-        paddingHorizontal: 24,
-        gap: 24,
-      }}
-    >
+      <SafeAreaView
+        style={{
+          backgroundColor: "#000",
+          flex: 1,
+          paddingTop: 32,
+          paddingHorizontal: 24,
+          gap: 24,
+        }}
+      >
         <Text
           style={{
             fontFamily: theme.fonts.sansSemiBold,
@@ -39,11 +45,11 @@ export default function Home() {
         >
           Rideless
         </Text>
-      <Options />
-      <TouchableOpacity onPress={handleSignOut}>
-        <Text style={{ color: "#fff" }}>Sair</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        <Options />
+        <TouchableOpacity onPress={handleSignOut}>
+          <Text style={{ color: "#fff" }}>Sair</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 }

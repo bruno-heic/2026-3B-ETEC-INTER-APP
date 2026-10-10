@@ -47,3 +47,44 @@ export async function signOutUser(): Promise<
 
   return { ok: true };
 }
+
+export async function getCompleteUserInfo() {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Erro no Auth:", authError?.message);
+      return null;
+    }
+
+    const { data: profile, error: dbError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (dbError) {
+      console.warn(
+        "Aviso: Usuário autenticado mas sem perfil no banco:",
+        dbError.message,
+      );
+    }
+
+    const completeUser = {
+      id: user.id,
+      email: user.email,
+      lastSignIn: user.last_sign_in_at,
+
+      name: profile?.name || "Usuário",
+      avatarUrl: profile?.avatar_url || "",
+    };
+
+    return completeUser;
+  } catch (err) {
+    console.error("Erro inesperado ao buscar dados completos:", err);
+    return null;
+  }
+}

@@ -1,9 +1,33 @@
 import { theme } from "@/constants/theme";
+import { getCompleteUserInfo } from "@/services/auth";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import {router} from "expo-router";
+
+interface UserInfo {
+  id: string;
+  email?: string;
+  lastSignIn?: string;
+  name?: string;
+  phone?: string;
+  avatarUrl?: string;
+}
 
 export default function Options() {
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    async function loadUserData() {
+      const userInfo = await getCompleteUserInfo();
+      if (userInfo) {
+        setUser(userInfo);
+      }
+    }
+
+    loadUserData();
+  }, []);
+
   return (
     <>
       <View
@@ -129,7 +153,16 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
-          onPress={() => router.push("/settings")}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/settings",
+              params: {
+                UserId: user?.id,
+                UserEmail: user?.email,
+                UserName: user?.name,
+              },
+            })
+          }
         >
           <MaterialIcons name="settings" size={20} color="#9999" />
           <Text

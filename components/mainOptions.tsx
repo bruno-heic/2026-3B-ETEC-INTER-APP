@@ -126,7 +126,16 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
-          onPress={() => router.push("/account")}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/account",
+              params: {
+                UserId: user?.id,
+                UserEmail: user?.email,
+                UserName: user?.name,
+              },
+            })
+          }
         >
           <MaterialIcons name="account-circle" size={20} color="#9999" />
           <Text
@@ -153,16 +162,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/settings",
-              params: {
-                UserId: user?.id,
-                UserEmail: user?.email,
-                UserName: user?.name,
-              },
-            })
-          }
+          onPress={() => router.push("/(tabs)/settings")}
         >
           <MaterialIcons name="settings" size={20} color="#9999" />
           <Text

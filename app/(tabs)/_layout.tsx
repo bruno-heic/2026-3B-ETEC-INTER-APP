@@ -10,7 +10,12 @@ export default function Layout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="account" />
+      <Stack.Screen
+        name="account"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

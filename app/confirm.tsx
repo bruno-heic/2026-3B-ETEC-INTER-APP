@@ -1,7 +1,8 @@
 import { theme } from "@/constants/theme";
+import { supabase } from "@/utils/supabase";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useRef } from "react";
 import {
   Alert,
   Linking,
@@ -14,6 +15,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const toStr = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+const toNumOrNull = (v: string) => {
+  if (v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 type RowProps = {
   label: string;
@@ -37,6 +44,7 @@ function InfoRow({ label, value, highlight }: RowProps) {
 
 export default function Confirm() {
   const params = useLocalSearchParams<{
+    platformId: string;
     platformName: string;
     platformApp: string;
     productId: string;
@@ -51,8 +59,11 @@ export default function Confirm() {
     destLat: string;
     destLon: string;
     destName: string;
+    distanceKm: string;
+    durationMin: string;
   }>();
 
+  const platformId = toStr(params.platformId);
   const platformName = toStr(params.platformName);
   const platformApp = toStr(params.platformApp);
   const productId = toStr(params.productId);
@@ -67,6 +78,10 @@ export default function Confirm() {
   const destLat = toStr(params.destLat);
   const destLon = toStr(params.destLon);
   const destName = toStr(params.destName);
+  const distanceKm = toStr(params.distanceKm);
+  const durationMin = toStr(params.durationMin);
+
+  const rideSavedRef = useRef(false);
 
   const hasModelData = !!confidence;
   const toPercent = (v: string) => {
@@ -74,7 +89,73 @@ export default function Confirm() {
     return Number.isFinite(n) ? `${(n * 100).toFixed(0)}%` : "--";
   };
 
+  // Nunca bloqueia o fluxo: se falhar, só registra o erro no console.
+  const saveRide = async () => {
+    if (rideSavedRef.current) return; // evita duplicar na mesma tela
+
+    try {
+      const oLat = toNumOrNull(originLat);
+      const oLon = toNumOrNull(originLon);
+      const dLat = toNumOrNull(destLat);
+      const dLon = toNumOrNull(destLon);
+      const priceNum = toNumOrNull(price);
+
+      if (
+        oLat === null ||
+        oLon === null ||
+        dLat === null ||
+        dLon === null ||
+        priceNum === null
+      ) {
+        console.error("Corrida não salva: dados inválidos.");
+        return;
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("rides").insert({
+        user_id: user.id,
+
+        origin_name: originName || null,
+        origin_lat: oLat,
+        origin_lon: oLon,
+        dest_name: destName || null,
+        dest_lat: dLat,
+        dest_lon: dLon,
+
+        distance_km: toNumOrNull(distanceKm),
+        duration_min: toNumOrNull(durationMin),
+
+        platform_id: platformId,
+        platform_name: platformName,
+        platform_app: platformApp,
+        product_id: productId || null,
+        price: priceNum,
+        price_min: toNumOrNull(priceMin),
+        price_max: toNumOrNull(priceMax),
+        confidence: toNumOrNull(confidence),
+        acceptance_probability: toNumOrNull(acceptanceProbability),
+
+        status: "requested",
+      });
+
+      if (error) {
+        console.error("Erro ao salvar corrida:", error.message);
+        return;
+      }
+
+      rideSavedRef.current = true;
+    } catch (e) {
+      console.error("Erro ao salvar corrida:", e);
+    }
+  };
+
   const handleOpenApp = async () => {
+    await saveRide();
+
     if (platformApp === "99") {
       router.push({
         pathname: "/instructions99",

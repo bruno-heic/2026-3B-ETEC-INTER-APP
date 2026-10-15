@@ -16,6 +16,18 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="RideHistory"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="FavoriteRides"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

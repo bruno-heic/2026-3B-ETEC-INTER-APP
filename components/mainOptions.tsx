@@ -46,6 +46,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
+          onPress={() => router.push("/(tabs)/FavoriteRides")}
         >
           <MaterialIcons name="shortcut" size={20} color="#9999" />
           <Text
@@ -72,6 +73,7 @@ export default function Options() {
             flexDirection: "row",
             gap: 10,
           }}
+          onPress={() => router.push("/RideHistory")}
         >
           <MaterialIcons name="history" size={20} color="#9999" />
           <Text

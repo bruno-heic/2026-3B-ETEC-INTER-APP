@@ -89,6 +89,9 @@ export default function PriceSheet({
         destLat: destLat.toString(),
         destLon: destLon.toString(),
         destName: destName ?? "",
+        // novos: usados para salvar a corrida no Supabase
+        distanceKm: result ? result.distanceKm.toString() : "",
+        durationMin: result ? result.durationMin.toString() : "",
       },
     });
   };

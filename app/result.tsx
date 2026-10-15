@@ -255,8 +255,7 @@ export default function Result() {
   };
 
   const handleBack = () => {
-    if (router.canDismiss()) router.dismissAll();
-    router.replace("/(tabs)/account");
+    router.back();
   };
 
   if (!validCoords) {

@@ -1,30 +1,17 @@
 import Options from "@/components/mainOptions";
 import { theme } from "@/constants/theme";
-import { signOutUser } from "@/services/auth";
+import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-  Alert,
   Keyboard,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
-  const handleSignOut = async () => {
-    const result = await signOutUser();
-
-    if (!result.ok) {
-      Alert.alert("Erro", result.message);
-      return;
-    }
-
-    if (router.canDismiss()) {
-      router.dismissAll();
-    }
-    router.replace("/(auth)/signIn");
-  };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView
@@ -45,10 +32,33 @@ export default function Home() {
         >
           Rideless
         </Text>
-        <Options />
-        <TouchableOpacity onPress={handleSignOut}>
-          <Text style={{ color: "#fff" }}>Sair</Text>
+        <TouchableOpacity
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "row",
+            backgroundColor: "#1C1C1E",
+            paddingBlock: 20,
+            paddingInline: 15,
+            borderRadius: 32,
+            gap: 10,
+          }}
+          onPress={() => router.push("/search")}
+        >
+          <FontAwesome name="search" size={20} color="#9999" />
+          <TextInput
+            placeholder="Consultar uma viagem"
+            placeholderTextColor="#9999"
+            style={{
+              fontSize: theme.fontSizes.md,
+              fontFamily: theme.fonts.sans,
+              color: theme.colors.text,
+              backgroundColor: "#1C1C1E",
+              width: 270,
+            }}
+          />
         </TouchableOpacity>
+        <Options />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

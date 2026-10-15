@@ -1,9 +1,9 @@
 import { theme } from "@/constants/theme";
 import { getCompleteUserInfo } from "@/services/auth";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface UserInfo {
   id: string;
@@ -30,31 +30,6 @@ export default function Options() {
 
   return (
     <>
-      <View
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexDirection: "row",
-          backgroundColor: "#1C1C1E",
-          paddingBlock: 20,
-          paddingInline: 15,
-          borderRadius: 32,
-          gap: 10,
-        }}
-      >
-        <FontAwesome name="search" size={20} color="#9999" />
-        <TextInput
-          placeholder="Consultar uma corrida"
-          placeholderTextColor="#9999"
-          style={{
-            fontSize: theme.fontSizes.md,
-            fontFamily: theme.fonts.sans,
-            color: theme.colors.text,
-            backgroundColor: "#1C1C1E",
-            width: 270,
-          }}
-        />
-      </View>
       <View
         style={{
           backgroundColor: "#1C1C1E",
@@ -130,9 +105,9 @@ export default function Options() {
             router.push({
               pathname: "/(tabs)/account",
               params: {
-                UserId: user?.id,
-                UserEmail: user?.email,
-                UserName: user?.name,
+                userId: user?.id,
+                userEmail: user?.email,
+                userName: user?.name,
               },
             })
           }

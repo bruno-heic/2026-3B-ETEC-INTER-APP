@@ -88,3 +88,91 @@ export async function getCompleteUserInfo() {
     return null;
   }
 }
+
+type Sector = "name" | "email" | "password";
+
+export async function editUserInfo(
+  sector: Sector,
+  name: string,
+  email: string,
+  password: string,
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    if (sector === "name") {
+      const newName = name.trim();
+
+      if (!newName) {
+        return { ok: false, message: "O nome não pode ficar vazio." };
+      }
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        return { ok: false, message: "Usuário não autenticado." };
+      }
+
+      const { data, error } = await supabase
+        .from("users")
+        .update({ name: newName })
+        .eq("id", user.id)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        return {
+          ok: false,
+          message: "Não foi possível atualizar o nome no perfil.",
+        };
+      }
+
+      await supabase.auth.updateUser({ data: { name: newName } });
+
+      return { ok: true, message: "Nome atualizado com sucesso." };
+    }
+
+    if (sector === "email") {
+      const newEmail = email.trim().toLowerCase();
+
+      if (!/^\S+@\S+\.\S+$/.test(newEmail)) {
+        return { ok: false, message: "Digite um e-mail válido." };
+      }
+
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+
+      if (error) throw error;
+
+      return {
+        ok: true,
+        message:
+          "Enviamos um link de confirmação para o novo e-mail. A alteração só vale depois de confirmar.",
+      };
+    }
+
+    if (sector === "password") {
+      if (password.length < 6) {
+        return {
+          ok: false,
+          message: "A senha precisa ter pelo menos 6 caracteres.",
+        };
+      }
+
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) throw error;
+
+      return { ok: true, message: "Senha atualizada com sucesso." };
+    }
+
+    return { ok: false, message: "Opção inválida." };
+  } catch (error: any) {
+    console.error(`Erro ao editar ${sector}:`, error);
+    return {
+      ok: false,
+      message: error?.message ?? "Não foi possível salvar a alteração.",
+    };
+  }
+}

@@ -1,5 +1,5 @@
-import { platforms, Platform } from "../constants/platform";
-import { RouteResult } from "./route-service";
+import { Platform, platforms } from "../constants/platform";
+import { DirectionResult } from "./directions";
 
 export interface PriceResult {
   platform: Platform;
@@ -28,7 +28,7 @@ function calculatePrice(
   return Math.round(raw * multiplier * 100) / 100;
 }
 
-export function calculateAllPrices(route: RouteResult): PriceResult[] {
+export function calculateAllPrices(route: DirectionResult): PriceResult[] {
   const peak = isPeakHour();
 
   return platforms

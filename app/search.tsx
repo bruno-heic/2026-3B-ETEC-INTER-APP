@@ -1,12 +1,11 @@
-import { useLocalSearchParams, router } from "expo-router";
-import { theme } from "@/constants/theme";
 import SearchInput from "@/components/searchInput";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useEffect } from "react";
+import { theme } from "@/constants/theme";
 import { Suggestion } from "@/services/location";
-import { MainButton } from "@/components/button";
-import { Alert } from "react-native";
-
+import { MaterialIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 export default function Search() {
   const { lat, lon, shortName, displayName } = useLocalSearchParams<{
     lat: string;
@@ -67,21 +66,80 @@ export default function Search() {
   return (
     <SafeAreaView
       style={{
+        backgroundColor: "#000",
         flex: 1,
-        backgroundColor: theme.colors.background,
         paddingHorizontal: 24,
-        justifyContent: "space-between",
-        paddingBottom: 20,
+        gap: 24,
       }}
     >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "relative",
+          width: "100%",
+          height: 48,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+          style={{
+            borderWidth: 1,
+            backgroundColor: "#0c0c0c",
+            borderColor: "#1f1f1f",
+            borderRadius: 24,
+            width: 48,
+            height: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingLeft: 8,
+            zIndex: 1,
+          }}
+        >
+          <MaterialIcons name="arrow-back-ios" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <Text
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            textAlign: "center",
+            fontFamily: theme.fonts.sansSemiBold,
+            color: theme.colors.text,
+            fontSize: theme.fontSizes.md,
+            zIndex: 0,
+          }}
+        >
+          Corrida
+        </Text>
+
+        <TouchableOpacity
+          style={{
+            borderWidth: 1,
+            backgroundColor: theme.colors.primary,
+            borderColor: theme.colors.primaryBorder,
+            borderRadius: 24,
+            width: 48,
+            height: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1,
+          }}
+          onPress={handleConfirmRoute}
+        >
+          <MaterialIcons name="check" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <SearchInput
         onOriginSelect={handleOriginSelect}
         onDestSelect={handleDestSelect}
         lat={lat}
         lon={lon}
       />
-
-      <MainButton text="Visualizar corrida" event={handleConfirmRoute} />
     </SafeAreaView>
   );
 }

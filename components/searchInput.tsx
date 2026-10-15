@@ -1,18 +1,20 @@
-import {
-  Text,
-  View,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { theme } from "../constants/theme";
 import {
-  searchSuggestions,
   getLocationWithAddress,
+  searchSuggestions,
   Suggestion,
 } from "../services/location";
 
@@ -33,18 +35,19 @@ const SearchInput = ({ onOriginSelect, onDestSelect }: SearchInputProps) => {
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const handleInput = useCallback((text: string, field: "origin" | "dest") => {
     field === "origin" ? setOriginValue(text) : setDestValue(text);
     setActiveField(field);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (text.length < 3) {
       setSuggestions([]);
       setLoading(false);
       return;
     }
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
@@ -65,6 +68,7 @@ const SearchInput = ({ onOriginSelect, onDestSelect }: SearchInputProps) => {
       }
       setSuggestions([]);
       setActiveField(null);
+      Keyboard.dismiss();
     },
     [activeField, onOriginSelect, onDestSelect],
   );
@@ -87,101 +91,133 @@ const SearchInput = ({ onOriginSelect, onDestSelect }: SearchInputProps) => {
   };
 
   const handleClear = (field: "origin" | "dest") => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
     if (field === "origin") {
       setOriginValue("");
     } else {
       setDestValue("");
     }
     setSuggestions([]);
+    setLoading(false);
   };
 
-  const showList = activeField !== null;
+  // Tocar fora fecha o teclado e esconde o card
+  const handleDismiss = () => {
+    Keyboard.dismiss();
+    setActiveField(null);
+  };
+
+  const activeValue =
+    activeField === "origin"
+      ? originValue
+      : activeField === "dest"
+        ? destValue
+        : "";
+
+  const hasText = activeValue.length > 0;
+
+  // O card aparece se houver foco (botão de localização) ou texto (sugestões)
+  const showList = activeField !== null && (focused || hasText);
+
+  // Sugestões só existem quando há texto digitado
+  const showSuggestions = hasText && (loading || suggestions.length > 0);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inputBlock}>
-        <View style={styles.inputRow}>
-          <View style={styles.dotOrigin} />
-          <TextInput
-            style={styles.input}
-            placeholder="Endereço de embarque"
-            placeholderTextColor={theme.colors.muted}
-            value={originValue}
-            onFocus={() => setActiveField("origin")}
-            onChangeText={(text) => handleInput(text, "origin")}
-          />
-          {originValue.length > 0 && (
-            <TouchableOpacity onPress={() => handleClear("origin")}>
-              <MaterialIcons
-                name="close"
-                size={20}
-                color={theme.colors.muted}
-              />
-            </TouchableOpacity>
-          )}
+    <TouchableWithoutFeedback onPress={handleDismiss} accessible={false}>
+      <View style={styles.container}>
+        {/* Card com os dois campos */}
+        <View style={styles.card}>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              placeholder="Endereço de embarque"
+              placeholderTextColor="#9999"
+              value={originValue}
+              onFocus={() => {
+                setActiveField("origin");
+                setFocused(true);
+              }}
+              onChangeText={(text) => handleInput(text, "origin")}
+              onBlur={() => setFocused(false)}
+            />
+            {originValue.length > 0 && (
+              <TouchableOpacity onPress={() => handleClear("origin")}>
+                <MaterialIcons name="close" size={20} color="#9999" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              placeholder="Endereço de destino"
+              placeholderTextColor="#9999"
+              value={destValue}
+              onFocus={() => {
+                setActiveField("dest");
+                setFocused(true);
+              }}
+              onChangeText={(text) => handleInput(text, "dest")}
+              onBlur={() => setFocused(false)}
+            />
+            {destValue.length > 0 && (
+              <TouchableOpacity onPress={() => handleClear("dest")}>
+                <MaterialIcons name="close" size={20} color="#9999" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        <View style={[styles.inputRow, { borderTopWidth: 0 }]}>
-          <View style={styles.dotDest} />
-          <TextInput
-            style={styles.input}
-            placeholder="Endereço de destino"
-            placeholderTextColor={theme.colors.muted}
-            value={destValue}
-            onFocus={() => setActiveField("dest")}
-            onChangeText={(text) => handleInput(text, "dest")}
-          />
-          {destValue.length > 0 && (
-            <TouchableOpacity onPress={() => handleClear("dest")}>
-              <MaterialIcons
-                name="close"
-                size={20}
-                color={theme.colors.muted}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        {/* Card com localização e sugestões */}
+        {showList && (
+          <View style={[styles.card, styles.suggestionCard]}>
+            {focused && (
+              <TouchableOpacity
+                style={styles.locationBtn}
+                onPress={handleUseLocation}
+              >
+                <MaterialIcons
+                  name="near-me"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.locationLabel}>Usar localização atual</Text>
+              </TouchableOpacity>
+            )}
+
+            {focused && showSuggestions && <View style={styles.divider} />}
+
+            {hasText &&
+              (loading ? (
+                <ActivityIndicator size="small" color={theme.colors.muted} />
+              ) : (
+                <FlatList
+                  data={suggestions}
+                  keyExtractor={(_, i) => i.toString()}
+                  keyboardShouldPersistTaps="handled"
+                  ItemSeparatorComponent={() => <View style={styles.divider} />}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelect(item)}
+                    >
+                      <Text style={styles.suggestionText}>
+                        {item.shortName}
+                      </Text>
+                      <Text style={styles.suggestionSub} numberOfLines={1}>
+                        {item.displayName}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              ))}
+          </View>
+        )}
       </View>
-
-      {showList && (
-        <View style={styles.suggestionList}>
-          <TouchableOpacity
-            style={styles.locationBtn}
-            onPress={handleUseLocation}
-          >
-            <MaterialIcons name="near-me" size={16} color={theme.colors.text} />
-            <View>
-              <Text style={styles.locationLabel}>Usar localização atual</Text>
-            </View>
-          </TouchableOpacity>
-
-          {loading ? (
-            <ActivityIndicator
-              size="small"
-              color={theme.colors.muted}
-              style={{ paddingVertical: 16 }}
-            />
-          ) : (
-            <FlatList
-              data={suggestions}
-              keyExtractor={(_, i) => i.toString()}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.suggestionItem}
-                  onPress={() => handleSelect(item)}
-                >
-                  <Text style={styles.suggestionText}>{item.shortName}</Text>
-                  <Text style={styles.suggestionSub} numberOfLines={1}>
-                    {item.displayName}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          )}
-        </View>
-      )}
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -191,63 +227,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
+    gap: 16,
   },
-  inputBlock: {},
+  card: {
+    backgroundColor: "#1C1C1E",
+    padding: 24,
+    borderRadius: 32,
+    gap: 24,
+  },
+  suggestionCard: {
+    flexShrink: 1,
+  },
+  divider: {
+    borderTopWidth: 1,
+    borderColor: "#353535",
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 18,
-    paddingVertical: 20,
-    borderColor: theme.colors.border,
-  },
-  dotOrigin: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: theme.colors.text,
-  },
-  dotDest: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: theme.colors.text,
+    gap: 14,
   },
   input: {
     flex: 1,
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.lg,
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.md,
     color: theme.colors.text,
-  },
-  suggestionList: {
-    marginTop: 10,
-    flex: 1,
   },
   locationBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingVertical: 15,
   },
   locationLabel: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.lg,
-    color: theme.colors.text,
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.primary,
   },
   suggestionItem: {
-    paddingVertical: 15,
-    borderBottomWidth: 0.5,
-    borderColor: theme.colors.border,
+    paddingVertical: 14,
+    gap: 2,
   },
   suggestionText: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.lg,
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.md,
     color: theme.colors.text,
   },
   suggestionSub: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.md,
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.sm,
     color: theme.colors.muted,
-    marginTop: 2,
   },
 });

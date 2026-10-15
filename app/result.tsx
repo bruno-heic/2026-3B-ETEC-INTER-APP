@@ -1,185 +1,100 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { WebView } from "react-native-webview";
-import { getRoutePolyline } from "../services/location";
-import { theme } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 import PriceSheet from "../components/priceSheet";
+import { theme } from "../constants/theme";
 import { LocationRecommendation } from "../services/intelligence";
+import { getRoutePolyline } from "../services/location";
+
+const ACCENT = "#44ffcc";
+
+const toStr = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 export default function Result() {
-  const { originLat, originLon, originName, destLat, destLon, destName } =
-    useLocalSearchParams<{
-      originLat: string;
-      originLon: string;
-      originName?: string;
-      destLat: string;
-      destLon: string;
-      destName?: string;
-    }>();
+  const params = useLocalSearchParams<{
+    originLat: string;
+    originLon: string;
+    originName?: string;
+    destLat: string;
+    destLon: string;
+    destName?: string;
+  }>();
+
+  const insets = useSafeAreaInsets();
+  const webviewRef = useRef<WebView>(null);
 
   const [routeData, setRouteData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
   const [recommended, setRecommended] = useState<LocationRecommendation | null>(
     null,
   );
 
-  const webviewRef = useRef<WebView>(null);
+  const oLat = parseFloat(toStr(params.originLat));
+  const oLon = parseFloat(toStr(params.originLon));
+  const dLat = parseFloat(toStr(params.destLat));
+  const dLon = parseFloat(toStr(params.destLon));
+  const originName = toStr(params.originName) || undefined;
+  const destName = toStr(params.destName) || undefined;
 
-  const rawOriginLat = Array.isArray(originLat) ? originLat[0] : originLat;
-  const rawOriginLon = Array.isArray(originLon) ? originLon[0] : originLon;
-  const rawDestLat = Array.isArray(destLat) ? destLat[0] : destLat;
-  const rawDestLon = Array.isArray(destLon) ? destLon[0] : destLon;
-  const rawOriginName = Array.isArray(originName) ? originName[0] : originName;
-  const rawDestName = Array.isArray(destName) ? destName[0] : destName;
+  const validCoords = [oLat, oLon, dLat, dLon].every(Number.isFinite);
 
-  const oLat = parseFloat(rawOriginLat);
-  const oLon = parseFloat(rawOriginLon);
-  const dLat = parseFloat(rawDestLat);
-  const dLon = parseFloat(rawDestLon);
+  // Posição dos elementos flutuantes
+  const headerTop = insets.top + 8;
+  const mapControlsTop = headerTop + 48 + 12;
 
   useEffect(() => {
+    if (!validCoords) {
+      setLoading(false);
+      return;
+    }
+
+    let ativo = true;
+
     async function fetchRoute() {
-      if (!isNaN(oLat) && !isNaN(oLon) && !isNaN(dLat) && !isNaN(dLon)) {
+      try {
         const route = await getRoutePolyline(
           { lat: oLat, lon: oLon },
           { lat: dLat, lon: dLon },
         );
-        setRouteData(route);
+        if (ativo) setRouteData(route);
+      } catch {
+        if (ativo) setRouteData(null);
+      } finally {
+        if (ativo) setLoading(false);
       }
-      setLoading(false);
     }
+
     fetchRoute();
-  }, [oLat, oLon, dLat, dLon]);
 
-  const handleSelectRecommendation = (rec: LocationRecommendation) => {
-    setRecommended(rec);
+    return () => {
+      ativo = false;
+    };
+  }, [oLat, oLon, dLat, dLon, validCoords]);
 
-    const js = `
-      // Remove marcador anterior se existir
-      if (window._recMarker) window._recMarker.remove();
-      if (window._recLine) {
-        map.removeLayer('rec-line');
-        map.removeSource('rec-source');
-      }
+  const coordinatesJson = useMemo(
+    () =>
+      JSON.stringify(
+        routeData?.coordinates ?? [
+          [oLon, oLat],
+          [dLon, dLat],
+        ],
+      ),
+    [routeData, oLat, oLon, dLat, dLon],
+  );
 
-      // Marcador do ponto recomendado — anel verde
-      const elRec = document.createElement('div');
-      elRec.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#44ffcc;box-shadow:0 0 0 4px rgba(68,255,204,0.25)';
-      window._recMarker = new maplibregl.Marker({ element: elRec })
-        .setLngLat([${rec.lon}, ${rec.lat}])
-        .addTo(map);
+  const mapHtml = useMemo(() => {
+    if (!validCoords) return "";
 
-      // Linha tracejada da origem até o ponto recomendado
-      map.addSource('rec-source', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [[${oLon}, ${oLat}], [${rec.lon}, ${rec.lat}]]
-          }
-        }
-      });
-
-      map.addLayer({
-        id: 'rec-line',
-        type: 'line',
-        source: 'rec-source',
-        paint: {
-          'line-color': '#44ffcc',
-          'line-width': 2,
-          'line-dasharray': [2, 3],
-          'line-opacity': 0.8
-        }
-      });
-
-      window._recLine = true;
-
-      // Ajusta o mapa para mostrar origem + ponto recomendado
-      const bounds = new maplibregl.LngLatBounds();
-      bounds.extend([${oLon}, ${oLat}]);
-      bounds.extend([${rec.lon}, ${rec.lat}]);
-      map.fitBounds(bounds, { padding: 80, maxZoom: 16 });
-
-      true;
-    `;
-
-    webviewRef.current?.injectJavaScript(js);
-  };
-
-  const handleClearRecommendation = () => {
-    setRecommended(null);
-
-    const js = `
-      if (window._recMarker) window._recMarker.remove();
-      if (window._recLine) {
-        map.removeLayer('rec-line');
-        map.removeSource('rec-source');
-        window._recLine = false;
-      }
-      true;
-    `;
-
-    webviewRef.current?.injectJavaScript(js);
-  };
-
-  if (isNaN(oLat) || isNaN(oLon) || isNaN(dLat) || isNaN(dLon)) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ color: "#fff", fontFamily: theme.fonts.mono }}>
-          Coordenadas inválidas.
-        </Text>
-      </View>
-    );
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="small" color="#fff" />
-        <Text
-          style={{
-            color: theme.colors.muted,
-            marginTop: 10,
-            fontFamily: theme.fonts.mono,
-          }}
-        >
-          Calculando rota...
-        </Text>
-      </View>
-    );
-  }
-
-  const distanceKm = routeData
-    ? (routeData.distance / 1000).toFixed(1) + " km"
-    : "--";
-  const durationMin = routeData
-    ? Math.ceil(routeData.duration / 60) + " min"
-    : "--";
-
-  const coordinatesJson = routeData
-    ? JSON.stringify(routeData.coordinates)
-    : JSON.stringify([
-        [oLon, oLat],
-        [dLon, dLat],
-      ]);
-
-  const handleBack = () => {
-    router.dismissAll();
-    router.replace("/search");
-  };
-
-  const mapHtml = `
+    return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -189,11 +104,15 @@ export default function Result() {
         <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
         <style>
           * { box-sizing: border-box; }
-          html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #121212; }
+          html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
           #map { width: 100%; height: 100%; }
-          .maplibregl-ctrl-top-right { top: 120px !important; }
+          .maplibregl-ctrl-top-right { top: ${mapControlsTop}px !important; right: 12px !important; }
+          .maplibregl-ctrl-group { background: #1C1C1E !important; border-radius: 24px !important; overflow: hidden; box-shadow: none !important; border: 1px solid #1f1f1f; }
+          .maplibregl-ctrl-group button { width: 40px; height: 40px; background-color: transparent !important; }
+          .maplibregl-ctrl-group button + button { border-top: 1px solid #353535 !important; }
+          .maplibregl-ctrl-icon { filter: invert(1); }
           .origin-dot { width: 16px; height: 16px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,0.25); }
-          .dest-dot { width: 16px; height: 16px; background-color: #121212; border: 3.5px solid #ffffff; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,0.25); }
+          .dest-dot { width: 16px; height: 16px; background-color: #000; border: 3.5px solid #ffffff; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,0.25); }
         </style>
       </head>
       <body>
@@ -211,7 +130,10 @@ export default function Result() {
               zoom: 14
             });
 
-            map.addControl(new maplibregl.NavigationControl());
+            // Fica acessível para os scripts injetados pelo React Native
+            window._map = map;
+
+            map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
 
             map.on('load', () => {
               map.addSource('route', {
@@ -239,17 +161,135 @@ export default function Result() {
             elDest.className = 'dest-dot';
             new maplibregl.Marker({ element: elDest }).setLngLat(destination).addTo(map);
 
+            // Deixa espaço para o cabeçalho (topo) e para a sheet (base)
+            window._padding = { top: ${mapControlsTop + 20}, bottom: 360, left: 50, right: 50 };
+
             const bounds = new maplibregl.LngLatBounds();
             routeCoords.forEach(coord => bounds.extend(coord));
-            map.fitBounds(bounds, { padding: 70, maxZoom: 15 });
+            window._routeBounds = bounds;
+            map.fitBounds(bounds, { padding: window._padding, maxZoom: 15, duration: 0 });
 
           } catch (err) {
-            document.body.innerHTML = '<div style="color:white;padding:20px;font-family:monospace;">Erro: ' + err.message + '</div>';
+            document.body.innerHTML = '<div style="color:white;padding:20px;font-family:sans-serif;">Erro: ' + err.message + '</div>';
           }
         </script>
       </body>
     </html>
   `;
+  }, [validCoords, oLat, oLon, dLat, dLon, coordinatesJson, mapControlsTop]);
+
+  const handleSelectRecommendation = (rec: LocationRecommendation) => {
+    setRecommended(rec);
+
+    // IIFE: evita erro de "const já declarada" quando o script roda mais de uma vez
+    const js = `
+      (function () {
+        var map = window._map;
+        if (!map) return;
+
+        if (window._recMarker) { window._recMarker.remove(); window._recMarker = null; }
+        if (map.getLayer('rec-line')) map.removeLayer('rec-line');
+        if (map.getSource('rec-source')) map.removeSource('rec-source');
+
+        var elRec = document.createElement('div');
+        elRec.style.cssText = 'width:16px;height:16px;border-radius:50%;background:${ACCENT};box-shadow:0 0 0 4px rgba(68,255,204,0.25)';
+        window._recMarker = new maplibregl.Marker({ element: elRec })
+          .setLngLat([${rec.lon}, ${rec.lat}])
+          .addTo(map);
+
+        map.addSource('rec-source', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: [[${oLon}, ${oLat}], [${rec.lon}, ${rec.lat}]]
+            }
+          }
+        });
+
+        map.addLayer({
+          id: 'rec-line',
+          type: 'line',
+          source: 'rec-source',
+          paint: {
+            'line-color': '${ACCENT}',
+            'line-width': 2,
+            'line-dasharray': [2, 3],
+            'line-opacity': 0.8
+          }
+        });
+
+        var bounds = new maplibregl.LngLatBounds();
+        bounds.extend([${oLon}, ${oLat}]);
+        bounds.extend([${rec.lon}, ${rec.lat}]);
+        map.fitBounds(bounds, { padding: window._padding, maxZoom: 16 });
+      })();
+      true;
+    `;
+
+    webviewRef.current?.injectJavaScript(js);
+  };
+
+  const handleClearRecommendation = () => {
+    setRecommended(null);
+
+    const js = `
+      (function () {
+        var map = window._map;
+        if (!map) return;
+
+        if (window._recMarker) { window._recMarker.remove(); window._recMarker = null; }
+        if (map.getLayer('rec-line')) map.removeLayer('rec-line');
+        if (map.getSource('rec-source')) map.removeSource('rec-source');
+
+        if (window._routeBounds) {
+          map.fitBounds(window._routeBounds, { padding: window._padding, maxZoom: 15 });
+        }
+      })();
+      true;
+    `;
+
+    webviewRef.current?.injectJavaScript(js);
+  };
+
+  const handleBack = () => {
+    if (router.canDismiss()) router.dismissAll();
+    router.replace("/(tabs)/account");
+  };
+
+  if (!validCoords) {
+    return (
+      <View style={styles.center}>
+        <MaterialIcons
+          name="error-outline"
+          size={32}
+          color={theme.colors.muted}
+        />
+        <Text style={styles.centerTitle}>Coordenadas inválidas</Text>
+        <TouchableOpacity style={styles.centerButton} onPress={handleBack}>
+          <Text style={styles.centerButtonText}>Voltar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="small" color={theme.colors.text} />
+        <Text style={styles.centerText}>Calculando rota...</Text>
+      </View>
+    );
+  }
+
+  const distanceKm = routeData
+    ? (routeData.distance / 1000).toFixed(1) + " km"
+    : "--";
+  const durationMin = routeData
+    ? Math.ceil(routeData.duration / 60) + " min"
+    : "--";
 
   return (
     <View style={styles.container}>
@@ -258,106 +298,156 @@ export default function Result() {
         originWhitelist={["*"]}
         source={{ html: mapHtml }}
         style={styles.map}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
+        javaScriptEnabled
+        domStorageEnabled
         androidLayerType="hardware"
         mixedContentMode="always"
-        allowFileAccess={true}
-        startInLoadingState={true}
+        allowFileAccess
+        startInLoadingState
+        renderLoading={() => (
+          <View style={[styles.center, StyleSheet.absoluteFill]}>
+            <ActivityIndicator size="small" color={theme.colors.text} />
+          </View>
+        )}
       />
 
       <PriceSheet
         originLat={oLat}
         originLon={oLon}
-        originName={rawOriginName}
+        originName={originName}
         destLat={dLat}
         destLon={dLon}
-        destName={rawDestName}
+        destName={destName}
         onSelectRecommendation={handleSelectRecommendation}
       />
 
-      <View style={styles.overlayContainer}>
-        <TouchableOpacity onPress={handleBack}>
-          <MaterialIcons name="close" size={24} color={theme.colors.text} />
+      {/* Cabeçalho flutuante */}
+      <View style={[styles.header, { top: headerTop }]}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.circleButton}
+          hitSlop={8}
+        >
+          <MaterialIcons name="close" size={24} color="#fff" />
         </TouchableOpacity>
 
-        {recommended ? (
-          <View style={styles.directionHeader}>
-            <View style={styles.timeDistanceBox}>
-              <Text style={styles.durationText}>
-                {recommended.distance_meters}m
-              </Text>
-              <Text style={styles.distanceText}>
-                · economize R$ {recommended.economy.toFixed(2)}
-              </Text>
+        <View style={styles.pill}>
+          {recommended ? (
+            <>
+              <View style={styles.pillInfo}>
+                <MaterialIcons
+                  name="directions-walk"
+                  size={20}
+                  color={ACCENT}
+                />
+                <Text style={[styles.pillTitle, { color: ACCENT }]}>
+                  {recommended.distance_meters} m
+                </Text>
+                <Text style={styles.pillSub} numberOfLines={1}>
+                  economize R$ {recommended.economy.toFixed(2)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleClearRecommendation}
+                hitSlop={10}
+              >
+                <MaterialIcons
+                  name="close"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.pillInfo}>
+              <Text style={styles.pillTitle}>{durationMin}</Text>
+              <Text style={styles.pillSub}>{distanceKm}</Text>
             </View>
-            <TouchableOpacity onPress={handleClearRecommendation}>
-              <MaterialIcons
-                name="close"
-                size={18}
-                color={theme.colors.muted}
-              />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.directionHeader}>
-            <View style={styles.timeDistanceBox}>
-              <Text style={styles.durationText}>{durationMin}</Text>
-              <Text style={styles.distanceText}>({distanceKm})</Text>
-            </View>
-          </View>
-        )}
+          )}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#121212" },
-  map: { flex: 1, backgroundColor: "#121212" },
+  container: { flex: 1, backgroundColor: "#000" },
+  map: { flex: 1, backgroundColor: "#000" },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#121212",
-  },
-  overlayContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#000000",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingHorizontal: 25,
-    paddingBottom: 15,
-    paddingTop: "18%",
+    backgroundColor: "#000",
     gap: 12,
+    paddingHorizontal: 24,
+  },
+  centerTitle: {
+    fontFamily: theme.fonts.sansSemiBold,
+    fontSize: theme.fontSizes.lg,
+    color: theme.colors.text,
+  },
+  centerText: {
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.muted,
+  },
+  centerButton: {
+    backgroundColor: "#1C1C1E",
+    borderRadius: 32,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    marginTop: 8,
+  },
+  centerButtonText: {
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.text,
+  },
+  header: {
+    position: "absolute",
+    left: 24,
+    right: 24,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 12,
   },
-  directionHeader: {
+  circleButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    backgroundColor: "#0c0c0c",
+    borderColor: "#1f1f1f",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pill: {
     flex: 1,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    backgroundColor: "#0c0c0c",
+    borderColor: "#1f1f1f",
+    paddingHorizontal: 20,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginLeft: 12,
+    justifyContent: "space-between",
   },
-  timeDistanceBox: {
+  pillInfo: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "baseline",
     gap: 8,
   },
-  durationText: {
-    fontFamily: theme.fonts.mono,
-    fontSize: 24,
+  pillTitle: {
+    fontFamily: theme.fonts.sansSemiBold,
+    fontSize: theme.fontSizes.lg,
     color: theme.colors.text,
-    fontWeight: "bold",
   },
-  distanceText: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.fontSizes.md,
+  pillSub: {
+    flexShrink: 1,
+    fontFamily: theme.fonts.sans,
+    fontSize: theme.fontSizes.sm,
     color: theme.colors.muted,
   },
 });

@@ -1,11 +1,47 @@
 import { theme } from "@/constants/theme";
-import { signOutUser } from "@/services/auth";
+import { getCompleteUserInfo, signOutUser } from "@/services/auth";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+type AccountUser = {
+  id: string;
+  name?: string;
+  email?: string;
+};
+
 export default function Account() {
-  const { UserId, UserEmail, UserName } = useLocalSearchParams();
+  const [user, setUser] = useState<AccountUser | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+
+      async function carregar() {
+        const info = await getCompleteUserInfo();
+        if (ativo && info) setUser(info);
+      }
+
+      carregar();
+
+      return () => {
+        ativo = false;
+      };
+    }, []),
+  );
+
+  const goToEdit = (actionName: "Nome" | "E-mail" | "Senha") =>
+    router.push({
+      pathname: "/(account)/editAccountInfo",
+      params: {
+        userId: user?.id,
+        userName: user?.name,
+        userEmail: user?.email,
+        actionName,
+      },
+    });
 
   const handleSignOut = async () => {
     const result = await signOutUser();
@@ -73,12 +109,12 @@ export default function Account() {
           Configurações
         </Text>
       </View>
+
       <View
         style={{
-          display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          paddingBlock: 42,
+          paddingVertical: 42,
         }}
       >
         <Text
@@ -89,7 +125,7 @@ export default function Account() {
             textAlign: "center",
           }}
         >
-          {UserName}
+          {user?.name}
         </Text>
         <Text
           style={{
@@ -99,9 +135,10 @@ export default function Account() {
             textAlign: "center",
           }}
         >
-          {UserEmail}
+          {user?.email}
         </Text>
       </View>
+
       <View
         style={{
           backgroundColor: "#1C1C1E",
@@ -112,11 +149,11 @@ export default function Account() {
       >
         <TouchableOpacity
           style={{
-            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexDirection: "row",
           }}
+          onPress={() => goToEdit("Nome")}
         >
           <Text
             style={{
@@ -129,7 +166,6 @@ export default function Account() {
           </Text>
           <View
             style={{
-              display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "row",
@@ -143,7 +179,7 @@ export default function Account() {
                 color: theme.colors.muted,
               }}
             >
-              {UserName}
+              {user?.name}
             </Text>
             <MaterialIcons
               name="arrow-forward-ios"
@@ -153,13 +189,15 @@ export default function Account() {
           </View>
         </TouchableOpacity>
 
+        <View style={{ borderTopWidth: 1, borderColor: "#353535" }} />
+
         <TouchableOpacity
           style={{
-            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexDirection: "row",
           }}
+          onPress={() => goToEdit("E-mail")}
         >
           <View style={{ gap: 4 }}>
             <Text
@@ -169,7 +207,7 @@ export default function Account() {
                 color: theme.colors.primary,
               }}
             >
-              {UserEmail}
+              {user?.email}
             </Text>
             <Text
               style={{
@@ -187,19 +225,17 @@ export default function Account() {
             color={theme.colors.muted}
           />
         </TouchableOpacity>
-        <View
-          style={{
-            borderTopWidth: 1,
-            borderColor: "#353535",
-          }}
-        />
+
+        <View style={{ borderTopWidth: 1, borderColor: "#353535" }} />
+
+        {/* Senha */}
         <TouchableOpacity
           style={{
-            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexDirection: "row",
           }}
+          onPress={() => goToEdit("Senha")}
         >
           <Text
             style={{
@@ -210,31 +246,21 @@ export default function Account() {
           >
             Senha
           </Text>
-          <View
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-              gap: 10,
-            }}
-          >
-            <MaterialIcons
-              name="arrow-forward-ios"
-              size={18}
-              color={theme.colors.muted}
-            />
-          </View>
+          <MaterialIcons
+            name="arrow-forward-ios"
+            size={18}
+            color={theme.colors.muted}
+          />
         </TouchableOpacity>
       </View>
+
       <TouchableOpacity
         style={{
-          display: "flex",
           backgroundColor: "#1C1C1E",
-          padding: 24,
+          padding: 20,
           borderRadius: 32,
-          gap: 24,
         }}
+        onPress={handleSignOut}
       >
         <Text
           style={{

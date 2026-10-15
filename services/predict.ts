@@ -1,32 +1,34 @@
-const API_URL = "https://didactic-engine-4q7gw47rw7x6cq556-8000.app.github.dev"
+const API_URL = "https://expert-space-cod-gxq579qp5g77fg5p-8001.app.github.dev";
 
 export interface PredictInput {
-  distancia_km: number
-  duracao_min: number
-  hora: number
-  dia_semana: number
-  plataforma: string
-  categoria: string
-  preco_estimado: number
-  cenario?: string
-  demanda?: number
-  motoristas?: number
-  multiplicador_regiao?: number
-  multiplicador_hora?: number
-  multiplicador_demanda?: number
-  prob_aceitacao?: number
+  distancia_km: number;
+  duracao_min: number;
+  hora: number;
+  dia_semana: number;
+  plataforma: string;
+  categoria: string;
+  preco_estimado: number;
+  cenario?: string;
+  demanda?: number;
+  motoristas?: number;
+  multiplicador_regiao?: number;
+  multiplicador_hora?: number;
+  multiplicador_demanda?: number;
+  prob_aceitacao?: number;
 }
 
 export interface PredictResult {
-  predicted_price: number
-  price_min: number
-  price_max: number
-  acceptance_probability: number
-  demand_multiplier: number
-  confidence: number
+  predicted_price: number;
+  price_min: number;
+  price_max: number;
+  acceptance_probability: number;
+  demand_multiplier: number;
+  confidence: number;
 }
 
-export async function predictPrice(input: PredictInput): Promise<PredictResult | null> {
+export async function predictPrice(
+  input: PredictInput,
+): Promise<PredictResult | null> {
   try {
     const res = await fetch(`${API_URL}/predict`, {
       method: "POST",
@@ -47,13 +49,13 @@ export async function predictPrice(input: PredictInput): Promise<PredictResult |
         destino_lat: 0,
         destino_lon: 0,
       }),
-    })
+    });
 
-    if (!res.ok) throw new Error(`Erro: ${res.status}`)
+    if (!res.ok) throw new Error(`Erro: ${res.status}`);
 
-    return await res.json()
+    return await res.json();
   } catch (error) {
-    console.error("Erro ao chamar /predict:", error)
-    return null
+    console.error("Erro ao chamar /predict:", error);
+    return null;
   }
 }

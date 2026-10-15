@@ -1,4 +1,5 @@
 import { theme } from "@/constants/theme";
+import { loadSettings } from "@/services/settings";
 import { supabase } from "@/utils/supabase";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -154,8 +155,28 @@ export default function Confirm() {
   };
 
   const handleOpenApp = async () => {
-    await saveRide();
+    const settings = await loadSettings();
 
+    if (settings.confirmBeforeOpen) {
+      const ok = await new Promise<boolean>((resolve) =>
+        Alert.alert(
+          `Abrir ${platformName}?`,
+          "Você será levado ao aplicativo para concluir o pedido.",
+          [
+            {
+              text: "Cancelar",
+              style: "cancel",
+              onPress: () => resolve(false),
+            },
+            { text: "Abrir", onPress: () => resolve(true) },
+          ],
+          { cancelable: true, onDismiss: () => resolve(false) },
+        ),
+      );
+      if (!ok) return;
+    }
+
+    if (settings.saveHistory) await saveRide();
     if (platformApp === "99") {
       router.push({
         pathname: "/instructions99",

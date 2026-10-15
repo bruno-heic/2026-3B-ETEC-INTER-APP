@@ -1,9 +1,9 @@
 import { theme } from "@/constants/theme";
+import { supabase } from "@/utils/supabase";
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -22,8 +23,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-const STORAGE_KEY = "@favorite_routes";
 const WARN = "#ff8a80";
+const TABLE = "favorite_routes";
+const COLUMNS =
+  "id, label, origin_name, origin_lat, origin_lon, dest_name, dest_lat, dest_lon";
 
 type Place = { name: string; lat: number; lon: number };
 
@@ -34,12 +37,34 @@ type FavoriteRoute = {
   dest: Place;
 };
 
+type Row = {
+  id: string;
+  label: string;
+  origin_name: string;
+  origin_lat: number;
+  origin_lon: number;
+  dest_name: string;
+  dest_lat: number;
+  dest_lon: number;
+};
+
 type Draft = { label: string; origin: string; dest: string };
 
-const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const fromRow = (r: Row): FavoriteRoute => ({
+  id: r.id,
+  label: r.label,
+  origin: {
+    name: r.origin_name,
+    lat: Number(r.origin_lat),
+    lon: Number(r.origin_lon),
+  },
+  dest: {
+    name: r.dest_name,
+    lat: Number(r.dest_lat),
+    lon: Number(r.dest_lon),
+  },
+});
 
-// Converte o texto digitado em coordenadas.
-// Se você já tem uma busca de endereços em services/location, troque aqui.
 async function resolveAddress(
   text: string,
 ): Promise<{ lat: number; lon: number } | null> {
@@ -48,20 +73,20 @@ async function resolveAddress(
   return { lat: results[0].latitude, lon: results[0].longitude };
 }
 
-/* ------------------------------ campo ------------------------------ */
-
 function Field({
   label,
   value,
   onChangeText,
   placeholder,
   returnKeyType,
+  maxLength,
 }: {
   label: string;
   value: string;
   onChangeText: (t: string) => void;
   placeholder: string;
   returnKeyType?: "next" | "done";
+  maxLength?: number;
 }) {
   return (
     <View style={styles.field}>
@@ -72,13 +97,12 @@ function Field({
         placeholder={placeholder}
         placeholderTextColor={theme.colors.muted}
         returnKeyType={returnKeyType}
+        maxLength={maxLength}
         style={styles.fieldInput}
       />
     </View>
   );
 }
-
-/* ------------------------------ modal ------------------------------ */
 
 function RouteModal({
   visible,
@@ -156,6 +180,7 @@ function RouteModal({
               onChangeText={setLabel}
               placeholder="Ex.: Casa → Trabalho"
               returnKeyType="next"
+              maxLength={60}
             />
             <Field
               label="Origem"
@@ -205,33 +230,42 @@ function RouteModal({
   );
 }
 
-/* ------------------------------- tela ------------------------------- */
-
 export default function FavoriteRoutes() {
   const [routes, setRoutes] = useState<FavoriteRoute[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<FavoriteRoute | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(parsed)) setRoutes(parsed);
-      } catch (e) {
-        console.error("Erro ao carregar atalhos:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
+  const fetchRoutes = useCallback(async () => {
+    try {
+      setError(false);
 
-    load();
+      const { data, error: err } = await supabase
+        .from(TABLE)
+        .select(COLUMNS)
+        .order("created_at", { ascending: false });
+
+      if (err) throw err;
+
+      setRoutes((data ?? []).map((r) => fromRow(r as Row)));
+    } catch (e) {
+      console.error("Erro ao carregar atalhos:", e);
+      setError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  const persist = async (next: FavoriteRoute[]) => {
-    setRoutes(next);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  useEffect(() => {
+    fetchRoutes();
+  }, [fetchRoutes]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchRoutes();
   };
 
   const openAdd = () => {
@@ -251,7 +285,15 @@ export default function FavoriteRoutes() {
     const destText = draft.dest.trim();
 
     try {
-      // Na edição, reaproveita as coordenadas se o texto não mudou.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        Alert.alert("Erro", "Faça login para salvar atalhos.");
+        return false;
+      }
+
       let origin: Place | null =
         editing && editing.origin.name === originText ? editing.origin : null;
       let dest: Place | null =
@@ -281,18 +323,40 @@ export default function FavoriteRoutes() {
         dest = { name: destText, ...coords };
       }
 
-      const route: FavoriteRoute = {
-        id: editing?.id ?? makeId(),
-        label: draft.label.trim() || destText,
-        origin,
-        dest,
+      const payload = {
+        label: draft.label.trim() || destText.slice(0, 60),
+        origin_name: origin.name,
+        origin_lat: origin.lat,
+        origin_lon: origin.lon,
+        dest_name: dest.name,
+        dest_lat: dest.lat,
+        dest_lon: dest.lon,
       };
 
-      const next = editing
-        ? routes.map((r) => (r.id === editing.id ? route : r))
-        : [route, ...routes];
+      if (editing) {
+        const { data, error: err } = await supabase
+          .from(TABLE)
+          .update(payload)
+          .eq("id", editing.id)
+          .select(COLUMNS)
+          .single();
 
-      await persist(next);
+        if (err) throw err;
+
+        const updated = fromRow(data as Row);
+        setRoutes((rs) => rs.map((r) => (r.id === updated.id ? updated : r)));
+      } else {
+        const { data, error: err } = await supabase
+          .from(TABLE)
+          .insert({ user_id: user.id, ...payload })
+          .select(COLUMNS)
+          .single();
+
+        if (err) throw err;
+
+        setRoutes((rs) => [fromRow(data as Row), ...rs]);
+      }
+
       return true;
     } catch (e) {
       console.error("Erro ao salvar atalho:", e);
@@ -307,17 +371,25 @@ export default function FavoriteRoutes() {
       {
         text: "Excluir",
         style: "destructive",
-        onPress: () => {
-          persist(routes.filter((r) => r.id !== route.id)).catch((e) =>
-            console.error("Erro ao excluir atalho:", e),
-          );
+        onPress: async () => {
+          const { error: err } = await supabase
+            .from(TABLE)
+            .delete()
+            .eq("id", route.id);
+
+          if (err) {
+            console.error("Erro ao excluir atalho:", err);
+            Alert.alert("Erro", "Não foi possível excluir o atalho.");
+            return;
+          }
+
+          setRoutes((rs) => rs.filter((r) => r.id !== route.id));
         },
       },
     ]);
   };
 
   const openRoute = (route: FavoriteRoute) => {
-    // Ajuste o pathname se a sua tela do mapa tiver outro nome de rota.
     router.push({
       pathname: "/result",
       params: {
@@ -333,7 +405,6 @@ export default function FavoriteRoutes() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Cabeçalho */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -353,6 +424,27 @@ export default function FavoriteRoutes() {
         <View style={styles.center}>
           <ActivityIndicator size="small" color={theme.colors.text} />
         </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <MaterialIcons
+            name="error-outline"
+            size={32}
+            color={theme.colors.muted}
+          />
+          <Text style={styles.centerTitle}>Não foi possível carregar</Text>
+          <Text style={styles.centerText}>
+            Verifique sua conexão e tente novamente.
+          </Text>
+          <TouchableOpacity
+            style={styles.centerButton}
+            onPress={() => {
+              setLoading(true);
+              fetchRoutes();
+            }}
+          >
+            <Text style={styles.centerButtonText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
       ) : routes.length === 0 ? (
         <View style={styles.center}>
           <MaterialIcons name="shortcut" size={32} color={theme.colors.muted} />
@@ -371,6 +463,13 @@ export default function FavoriteRoutes() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.muted}
+            />
+          }
           ListHeaderComponent={
             <Text style={styles.hint}>
               Toque em um atalho para ver a rota e os preços.
@@ -451,8 +550,6 @@ export default function FavoriteRoutes() {
     </SafeAreaView>
   );
 }
-
-/* ------------------------------ estilos ------------------------------ */
 
 const styles = StyleSheet.create({
   container: {

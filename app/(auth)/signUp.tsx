@@ -142,6 +142,7 @@ export default function SignUp() {
                   fontSize: theme.fontSizes.md,
                   fontFamily: theme.fonts.sans,
                   color: theme.colors.text,
+                  width: "85%",
                 }}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>

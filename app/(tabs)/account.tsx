@@ -106,7 +106,7 @@ export default function Account() {
             zIndex: 0,
           }}
         >
-          Configurações
+          Perfil
         </Text>
       </View>
 

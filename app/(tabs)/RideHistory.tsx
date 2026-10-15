@@ -1,4 +1,5 @@
 import { theme } from "@/constants/theme";
+import { loadSettings } from "@/services/settings";
 import { supabase } from "@/utils/supabase";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -905,6 +906,7 @@ export default function RideHistory() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("30d");
   const [selectedBar, setSelectedBar] = useState<number | null>(null);
+  const [showInsights, setShowInsights] = useState(true);
 
   const fetchRides = useCallback(async () => {
     try {
@@ -944,6 +946,13 @@ export default function RideHistory() {
       setLoading(false);
       setRefreshing(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadSettings().then((s) => {
+      setPeriod(s.historyPeriod);
+      setShowInsights(s.showInsights);
+    });
   }, []);
 
   useEffect(() => {
@@ -1114,7 +1123,7 @@ export default function RideHistory() {
         )}
       </View>
 
-      {stats.count > 0 ? (
+      {stats.count > 0 && showInsights ? (
         <Insights
           stats={stats}
           bars={bars}
